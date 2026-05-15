@@ -1,0 +1,189 @@
+# CHALLENGER LEVEL: THE IMPOSSIBLE DREAM
+# WARNING: This map is designed to be extremely challenging and may not be solvable
+# by most algorithms. It's intended as a stress test and research challenge.
+# The goal is NOT to validate this map but to push algorithmic limits.
+
+nb_drones: 25
+
+# === LAYER 0: The Nightmare Begins ===
+start_hub: start 0 0 [color=green max_drones=25]
+
+# Single-file entry gates (extreme bottleneck)
+hub: gate_hell1 2 0 [color=red max_drones=1]
+hub: gate_hell2 3 0 [color=red max_drones=1]
+hub: gate_hell3 4 0 [color=red max_drones=1]
+hub: gate_hell4 5 0 [color=red max_drones=1]
+hub: gate_hell5 6 0 [color=red max_drones=1]
+
+# === LAYER 1: The Maze of Despair ===
+# Multiple interconnected dead ends and loops
+hub: maze_trap_a1 2 1 [color=purple]
+hub: maze_trap_a2 3 1 [color=purple]
+hub: maze_trap_a3 4 1 [color=purple]
+hub: maze_dead_a 5 1 [color=black]
+
+hub: maze_trap_b1 2 -1 [color=purple]
+hub: maze_trap_b2 3 -1 [color=purple]
+hub: maze_trap_b3 4 -1 [color=purple]
+hub: maze_dead_b 5 -1 [color=black]
+
+hub: maze_loop1 2 2 [zone=restricted color=brown]
+hub: maze_loop2 3 2 [zone=restricted color=brown]
+hub: maze_loop3 4 2 [zone=restricted color=brown]
+hub: maze_loop4 5 2 [zone=restricted color=brown]
+hub: maze_loop5 6 2 [zone=restricted color=brown]
+hub: maze_loop6 6 1 [zone=restricted color=brown]
+
+# === LAYER 2: The Capacity Nightmare ===
+hub: micro_gate1 7 0 [color=orange max_drones=1]
+hub: micro_gate2 8 0 [color=orange max_drones=1]
+hub: micro_gate3 9 0 [color=orange max_drones=1]
+
+# Overflow areas with terrible costs
+hub: overflow_hell1 7 1 [zone=restricted color=maroon max_drones=2]
+hub: overflow_hell2 8 1 [zone=restricted color=maroon max_drones=2]
+hub: overflow_hell3 9 1 [zone=restricted color=maroon max_drones=2]
+hub: overflow_hell4 7 -1 [zone=restricted color=maroon max_drones=2]
+hub: overflow_hell5 8 -1 [zone=restricted color=maroon max_drones=2]
+hub: overflow_hell6 9 -1 [zone=restricted color=maroon max_drones=2]
+
+# === LAYER 3: The False Hope Section ===
+# Priority zones that lead to more traps
+hub: false_hope1 10 0 [zone=priority color=gold max_drones=3]
+hub: false_hope2 11 0 [zone=priority color=gold max_drones=2]
+hub: false_hope3 12 0 [zone=priority color=gold max_drones=1]
+
+# More dead ends disguised as good paths
+hub: priority_trap1 10 1 [zone=priority color=gold]
+hub: priority_trap2 11 1 [zone=priority color=gold]
+hub: priority_dead 12 1 [color=black]
+
+hub: priority_trap3 10 -1 [zone=priority color=gold]
+hub: priority_trap4 11 -1 [zone=priority color=gold]
+hub: priority_dead2 12 -1 [color=black]
+
+# === LAYER 4: The Convergence Hell ===
+# Multiple restricted paths that must merge
+hub: conv_restricted1 13 2 [zone=restricted color=darkred max_drones=1]
+hub: conv_restricted2 14 2 [zone=restricted color=darkred max_drones=1]
+hub: conv_restricted3 15 2 [zone=restricted color=darkred max_drones=1]
+
+hub: conv_restricted4 13 0 [zone=restricted color=darkred max_drones=1]
+hub: conv_restricted5 14 0 [zone=restricted color=darkred max_drones=1]
+hub: conv_restricted6 15 0 [zone=restricted color=darkred max_drones=1]
+
+hub: conv_restricted7 13 -2 [zone=restricted color=darkred max_drones=1]
+hub: conv_restricted8 14 -2 [zone=restricted color=darkred max_drones=1]
+hub: conv_restricted9 15 -2 [zone=restricted color=darkred max_drones=1]
+
+# === LAYER 5: The Final Gauntlet of Doom ===
+hub: final_merge 16 0 [color=violet max_drones=5]
+hub: final_torture1 17 0 [color=crimson max_drones=2]
+hub: final_torture2 18 0 [color=crimson max_drones=1]
+hub: final_torture3 19 0 [color=crimson max_drones=1]
+hub: final_torture4 20 0 [color=crimson max_drones=1]
+hub: final_torture5 21 0 [color=crimson max_drones=1]
+
+# The ultimate goal
+end_hub: impossible_goal 23 0 [color=rainbow max_drones=25]
+
+# === CONNECTIONS: The Web of Suffering ===
+
+# Layer 0 connections (bottleneck hell)
+connection: start-gate_hell1 [max_link_capacity=1]
+connection: gate_hell1-gate_hell2 [max_link_capacity=1]
+connection: gate_hell2-gate_hell3 [max_link_capacity=1]
+connection: gate_hell3-gate_hell4 [max_link_capacity=1]
+connection: gate_hell4-gate_hell5 [max_link_capacity=1]
+
+# Layer 1 connections (maze of despair)
+connection: gate_hell1-maze_trap_a1
+connection: gate_hell2-maze_trap_b1
+connection: gate_hell3-maze_loop1
+
+connection: maze_trap_a1-maze_trap_a2
+connection: maze_trap_a2-maze_trap_a3
+connection: maze_trap_a3-maze_dead_a
+
+connection: maze_trap_b1-maze_trap_b2
+connection: maze_trap_b2-maze_trap_b3
+connection: maze_trap_b3-maze_dead_b
+
+connection: maze_loop1-maze_loop2
+connection: maze_loop2-maze_loop3
+connection: maze_loop3-maze_loop4
+connection: maze_loop4-maze_loop5
+connection: maze_loop5-maze_loop6
+connection: maze_loop6-maze_loop1
+
+# Escape routes from maze (very limited)
+connection: maze_trap_a2-micro_gate1
+connection: maze_trap_b2-micro_gate1
+connection: maze_loop3-micro_gate2
+
+# Layer 2 connections (capacity nightmare)
+connection: gate_hell5-micro_gate1
+connection: micro_gate1-micro_gate2
+connection: micro_gate2-micro_gate3
+
+# Overflow hell connections
+connection: micro_gate1-overflow_hell1
+connection: micro_gate2-overflow_hell2
+connection: micro_gate3-overflow_hell3
+connection: micro_gate1-overflow_hell4
+connection: micro_gate2-overflow_hell5
+connection: micro_gate3-overflow_hell6
+
+connection: overflow_hell1-overflow_hell2
+connection: overflow_hell2-overflow_hell3
+connection: overflow_hell4-overflow_hell5
+connection: overflow_hell5-overflow_hell6
+
+connection: overflow_hell3-false_hope1
+connection: overflow_hell6-false_hope1
+
+# Layer 3 connections (false hope)
+connection: micro_gate3-false_hope1
+connection: false_hope1-false_hope2
+connection: false_hope2-false_hope3
+
+# False hope traps
+connection: false_hope1-priority_trap1
+connection: false_hope2-priority_trap2
+connection: false_hope3-priority_dead
+
+connection: false_hope1-priority_trap3
+connection: false_hope2-priority_trap4
+connection: false_hope3-priority_dead2
+
+connection: priority_trap1-priority_trap2
+connection: priority_trap3-priority_trap4
+
+# Layer 4 connections (convergence hell)
+connection: false_hope3-conv_restricted1
+connection: false_hope3-conv_restricted4
+connection: false_hope3-conv_restricted7
+
+connection: conv_restricted1-conv_restricted2
+connection: conv_restricted2-conv_restricted3
+connection: conv_restricted4-conv_restricted5
+connection: conv_restricted5-conv_restricted6
+connection: conv_restricted7-conv_restricted8
+connection: conv_restricted8-conv_restricted9
+
+connection: conv_restricted3-final_merge
+connection: conv_restricted6-final_merge
+connection: conv_restricted9-final_merge
+
+# Layer 5 connections (final gauntlet)
+connection: final_merge-final_torture1
+connection: final_torture1-final_torture2
+connection: final_torture2-final_torture3
+connection: final_torture3-final_torture4
+connection: final_torture4-final_torture5
+connection: final_torture5-impossible_goal
+
+# Emergency bypass routes (extremely expensive)
+connection: overflow_hell1-conv_restricted1
+connection: overflow_hell4-conv_restricted7
+connection: priority_trap1-conv_restricted4
