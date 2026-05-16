@@ -1,0 +1,11 @@
+{
+    "ux": {},
+    "status": {},
+    "errors": {
+        "parser": {
+            "nb_drones": "Number of drones must be defined in the first line using 'nb_drones: <positive_integer>'.",
+            "invalid_key": "Key '{key}' not recognized.",
+            "...": ".."
+            }
+        }
+}
