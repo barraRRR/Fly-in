@@ -1,11 +1,13 @@
 {
     "ux": {},
-    "status": {},
+    "status": {
+        "loading_map": "..."
+    },
     "errors": {
         "parser": {
-            "nb_drones": "Number of drones must be defined in the first line using 'nb_drones: <positive_integer>'.",
+            "nb_drones_first_item": "Number of drones must be defined in the first line using 'nb_drones: <positive_integer>'.",
             "invalid_key": "Key '{key}' not recognized.",
-            "...": ".."
+            "metadata": "Metadata '{meta}' not recognised"
             }
         }
 }
