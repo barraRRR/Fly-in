@@ -1,0 +1,22 @@
+{
+    "ux": {},
+    "status": {
+        "loading_map": "Loading {map}...",
+        "parsing_map": "Parsing {map}..."
+    },
+    "error": {
+        "parser": {
+            "nb_drones_first_item": "Number of drones must be defined in the first line using 'nb_drones: <positive_integer>'.",
+            "nb_drones_repeated": "Number of drones can only be defined once (in the first line).",
+            "invalid_key": "Key '{key}' not recognized.",
+            "metadata": "Metadata '{meta}' not recognized.",
+            "duplicate_hub_names": "Hub names must be unique.",
+            "duplicate_hub_coords": "Hubs cannot share the same coordinates.",
+            "duplicate_connection": "Connections cannot be repeated.",
+            "self_link": "Invalid link: {point_a} and {point_b} are the same hub.",
+            "missing_hub": "Invalid link: hub '{point}' not found.",
+            "missing_start_hub": "There must be exactly one start hub.",
+            "missing_end_hub": "There must be exactly one end hub."
+        }
+    }
+}
