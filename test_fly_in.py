@@ -1,6 +1,6 @@
 # importar textos ok
 # importat textos fail
-from input_parser import Network
+from class_network_parser import Network
 from pathlib import Path
 from typing import Generator, Tuple, Optional, Union
 import pytest
@@ -127,7 +127,7 @@ class TestNetwork:
     def test_parser(self, file_path: str) -> None:
         """
         """
-        net = Network.parser(file_path)
+        net = Network.parse(file_path)
         print(net.get_map_info())
         assert True
     
@@ -141,7 +141,7 @@ class TestNetwork:
             f.flush()
             temp_file = f.name
         
-        net = Network.parser(temp_file)
+        net = Network.parse(temp_file)
         assert True
 
     @pytest.mark.parametrize('_', range(ITERATIONS))
@@ -155,7 +155,7 @@ class TestNetwork:
                 f.flush()
                 temp_file = f.name
             
-            net = Network.parser(temp_file)
+            net = Network.parse(temp_file)
 
     @pytest.mark.parametrize('_', range(ITERATIONS))
     def test_invalid_coords(self, _) -> None:
@@ -168,7 +168,7 @@ class TestNetwork:
                 f.flush()
                 temp_file = f.name
             
-            net = Network.parser(temp_file)
+            net = Network.parse(temp_file)
 
     @pytest.mark.parametrize('_', range(ITERATIONS))
     def test_invalid_color(self, _) -> None:
@@ -181,7 +181,7 @@ class TestNetwork:
                 f.flush()
                 temp_file = f.name
             
-            net = Network.parser(temp_file)
+            net = Network.parse(temp_file)
 
     @pytest.mark.parametrize('_', range(ITERATIONS))
     def test_invalid_zone(self, _) -> None:
@@ -194,7 +194,7 @@ class TestNetwork:
                 f.flush()
                 temp_file = f.name
             
-            net = Network.parser(temp_file)
+            net = Network.parse(temp_file)
 
     @pytest.mark.parametrize('_', range(ITERATIONS))
     def test_invalid_max_drones(self, _) -> None:
@@ -207,7 +207,7 @@ class TestNetwork:
                 f.flush()
                 temp_file = f.name
             
-            net = Network.parser(temp_file)
+            net = Network.parse(temp_file)
 
     @pytest.mark.parametrize('_', range(ITERATIONS))
     def test_invalid_max_link(self, _) -> None:
@@ -220,4 +220,4 @@ class TestNetwork:
                 f.flush()
                 temp_file = f.name
             
-            net = Network.parser(temp_file)
+            net = Network.parse(temp_file)

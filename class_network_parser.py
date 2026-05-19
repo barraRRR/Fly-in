@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, ValidationError, model_validator
-from typing import Dict, List, Tuple, Literal, Optional, Protocol, ClassVar
+from pydantic import BaseModel, Field, ValidationError, model_validator, ConfigDict, ConfigDict
+from typing import Protocol, Literal, Optional, Tuple, Any, List, Dict, ClassVar
 from utils import UX, STATUS, ERROR
 from enum import Enum
 import sys
@@ -13,29 +13,47 @@ class Zone(Enum):
     PRIORITY = 'priority'
 
 
+class DroneStatus(Enum):
+    STANDBY = 'standby'
+    DISPATCHED = 'dispatched'
+    TRANSIT = 'transit'
+    DELIVERED = 'delivered'
+
+
 class Parser(Protocol):
     def parse(raw: str) -> None:
         ...
 
 
+class Drone:
+    """
+    """
+    def __init__(self, code: int) -> None:
+        self.id: str = f"FOO_{code:03d}"
+        self.status: DroneStatus = DroneStatus.STANDBY
+
+
 class Hub(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     """
     Parses hub information from raw data
     """
-    type: Literal['start_hub', 'hub', 'end_hub']
+    hub_type: Literal['start_hub', 'hub', 'end_hub']
     name: str = Field(pattern=r"^[^- ]*$")
     coords: Tuple[int, int] = Field(default_factory=tuple)
     color: Optional[str] = Field(default=None, pattern=r"^[^ ]*$")
     max_drones: Optional[int] = Field(default=1, ge=1)
     zone: Optional[Zone] = Zone.NORMAL
+    links: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    drone_bay: Optional[List[Drone]] = Field(default_factory=list)
 
     @classmethod
     def parse(cls, line: str) -> 'Hub':
         """
         """
         line = line.lower().strip()
-        type, data = line.split(':', 1)
-        type = type.strip(' :')
+        hub_type, data = line.split(':', 1)
+        hub_type = hub_type.strip(' :')
         data = data.strip().split(' ')
         name = data[0]
 
@@ -43,7 +61,7 @@ class Hub(BaseModel):
         y = int(data[2])
 
         payload = {
-            'type': type,
+            'hub_type': hub_type,
             'name': name,
             'coords': (x, y),
         }
@@ -67,6 +85,13 @@ class Hub(BaseModel):
             pass
         
         return cls(**payload)
+    
+    def load_drones(self, nb_drones: int) -> None:
+        """
+        """
+        for i in range(nb_drones):
+            new_drone = Drone(i)
+            self.drone_bay.append(new_drone)
             
 
 class Connection(BaseModel):
@@ -75,7 +100,6 @@ class Connection(BaseModel):
     """
     point_a: str
     point_b: str
-    link: Tuple[str, str] = Field(default_factory=tuple)
     max_link_capacity: Optional[int] = Field(default=1, ge=1)
 
     @classmethod
@@ -92,7 +116,6 @@ class Connection(BaseModel):
         payload = {
             'point_a': point_a,
             'point_b': point_b,
-            'link': (point_a, point_b)
         }
 
         try:
@@ -120,18 +143,22 @@ class Network(BaseModel):
     }
     
     nb_drones: int = Field(ge=1)
-    hub: List[Hub] = Field(default_factory=list, min_length=2)
+    start_hub: Hub
+    hub: List[Hub] = Field(default_factory=list)
+    end_hub: Hub
     connection: List[Connection] = Field(default_factory=list)
 
     @classmethod
-    def parser(cls, file: str) -> 'Network':
+    def parse(cls, file: str) -> 'Network':
         """
         Opens map and collects raw data
         """
         first_line_nb_drones = False
         payload = {
             'nb_drones': None,
+            'start_hub': None,
             'hub': [],
+            'end_hub': None,
             'connection': []
         }
         print(STATUS['loading_map'].format(map=file), end='')
@@ -156,28 +183,43 @@ class Network(BaseModel):
                     payload['nb_drones'] = int(data)
                     first_line_nb_drones = True
 
-                elif key == 'start_hub' or key == 'end_hub':
-                    payload['hub'].append(cls.FACTORY[key].parse(line))
+                elif key == 'start_hub' and not payload['start_hub']:
+                    payload['start_hub'] = cls.FACTORY[key].parse(line)
+                    payload['start_hub'].load_drones(payload['nb_drones'])
 
-                else:
+                elif key == 'end_hub' and not payload['end_hub']:
+                    payload['end_hub'] = cls.FACTORY[key].parse(line)
+
+                elif key in ['hub', 'connection']:
                     payload[key].append(cls.FACTORY[key].parse(line))
+                
+                else:
+                    raise ValueError
         
+        hub_dict = {hub.name: hub for hub in payload['hub']}
+        hub_dict[payload['start_hub'].name] = payload['start_hub']
+        hub_dict[payload['end_hub'].name] = payload['end_hub']
+
+        for link in payload['connection']:
+            hub_a = hub_dict.get(link.point_a)
+            hub_b = hub_dict.get(link.point_b)
+            
+            if hub_a and hub_b:
+                hub_a.links.append(
+                    {'edge': hub_b, 'max': link.max_link_capacity}
+                    )
+                hub_b.links.append(
+                    {'edge': hub_a, 'max': link.max_link_capacity}
+                    )
+
         return cls(**payload)
     
-                
     @model_validator(mode='after')
     def validator(self) -> 'Network':
         """
         """
-        n_start = [hub for hub in self.hub if hub.type == 'start_hub']
-        if not len(n_start) == 1:
-            raise ValueError(ERROR['parser']['missing_start_hub'])
-        
-        n_end = [hub for hub in self.hub if hub.type == 'end_hub']
-        if not len(n_end) == 1:
-            raise ValueError(ERROR['parser']['missing_end_hub'])
-        
-        unique_names = {hub.name for hub in self.hub}
+        all_hubs = self.hub + [self.start_hub, self.end_hub]
+        unique_names = {hub.name for hub in all_hubs}
         if len(self.hub) > len(unique_names):
             raise ValueError(ERROR['parser']['duplicate_hub_names'])
         
@@ -187,7 +229,9 @@ class Network(BaseModel):
         
         unique_connections = set()
         for connection in self.connection:
-            current_connection = tuple(sorted(connection.link))
+            current_connection = tuple(sorted(
+                (connection.point_a, connection.point_b)
+                ))
             if current_connection in unique_connections:
                 raise ValueError(ERROR['parser']['duplicate_connection'])
             unique_connections.add(current_connection)
@@ -204,7 +248,7 @@ class Network(BaseModel):
                     raise ValueError(ERROR['parser']['missing_hub'].format(
                         point=point
                         ))
-            
+        
         print(' OK')
         return self
     
@@ -225,6 +269,9 @@ class Network(BaseModel):
         data += f"  - connections:\n"
         for c in self.connection:
             data += f"    · {c.point_a} - {c.point_b}"
-            data += f" [max_link_capacity={c.max_link_capacity}]\n" if c.max_link_capacity else "\n"
+            data += (
+                " [max_link_capacity="
+                f"{c.max_link_capacity}]\n" if c.max_link_capacity else "\n"
+                )
         
         return data

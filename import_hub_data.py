@@ -1,27 +1,6 @@
 from pathlib import Path
-from input_parser import Network
+from class_network_parser import Network
 import json
-
-
-invalid_names = [
-    'fail basur',
-    'oki-nawa',
-    '---doc---',
-    'you and me',
-    '-42-',
-    'dont panic',
-    'eva luation'
-]
-invalid_coords = [
-    [0, 'cat'],
-    ['foo', 'fizz'],
-    ['dof', 0]
-]
-invalid_colors = [
-    'bro wn',
-    'blu-e',
-    ' black '
-]
 
 
 def import_hub_data() -> None:
@@ -66,5 +45,3 @@ def import_hub_data() -> None:
 
 if __name__ == '__main__':
     import_hub_data()
-            
-
