@@ -50,7 +50,7 @@ class MapParser:
                 payload['start_hub'] = self._parse_hub(line)
                 for i in range(payload['nb_drones']):
                     payload['start_hub']['drone_bay'].append(
-                        {"id": f"FOO_{i:03d}", "status": "standby"}
+                        {"id": f"D_{i:03d}", "status": "standby"}
                     )
 
             elif key == 'end_hub' and not payload['end_hub']:

@@ -230,3 +230,5 @@ class TestNetwork:
             
             map = MapParser(temp_file)
             net = Network(**map.data)
+
+

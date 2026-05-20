@@ -25,6 +25,9 @@ class Drone(BaseModel):
     """
     id: str
     status: DroneStatus
+    current_hub: Optional[Hub] = Field(default=None)
+    flying_to: Optional[Hub] = Field(default=None)
+    visited_hubs: List[Hub] = Field(default_factory=list)
 
 
 class Hub(BaseModel):
@@ -100,11 +103,14 @@ class Network(BaseModel):
             
             if hub_a and hub_b:
                 hub_a.links.append(
-                    {'edge': hub_b, 'max': max_link_capacity}
+                    {'target_hub': hub_b, 'max': max_link_capacity}
                     )
                 hub_b.links.append(
-                    {'edge': hub_a, 'max': max_link_capacity}
+                    {'target_hub': hub_a, 'max': max_link_capacity}
                     )
+            
+            for drone in self.start_hub.drone_bay:
+                drone.current_hub = self.start_hub
         
         print(' OK')
         return self
