@@ -1,8 +1,20 @@
 from class_network import Network, Hub, Drone, DroneStatus, Zone
 from class_parser import MapParser
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Tuple
 from enum import Enum
 from collections import deque
+
+
+class HubFullError(Exception):
+    pass
+
+
+class NoLinksAvailableError(Exception):
+    pass
+
+
+class DroneCantMove(Exception):
+    pass
 
 
 class Simulatior:
@@ -51,6 +63,44 @@ class Simulatior:
         visited.remove(start.name)
 
         return all_paths
+    
+    def _find_shortest_path(self) -> List[Hub]:
+        """
+        """
+        ...
+    
+    def _launch_drones(self) -> None:
+        """
+        """
+        for drone in self.drones_left:
+          
+
+    def _find_target_hub(self, current_drone: Drone) -> None:
+        """
+        """
+        current_hub = current_drone.current_hub
+        try:
+            available_paths = [
+                path for path in self.all_paths if current_hub in path
+                ]
+    
+    def _route_status(self, current_hub: Hub, route: List[Hub]) -> Tuple[bool, int]:
+        """
+        """
+        hub_index = route.index(current_hub)
+        next_hub = route[hub_index + 1]
+        remaining_turns = (
+            len([hub for hub in route if hub.zone == Zone.NORMAL]) +
+            len([hub for hub in route if hub.zone == Zone.RESTRICTED]) -
+            hub_index
+        )
+        priority_next = True if next_hub.zone == Zone.PRIORITY else False
+        available_link = True if current_hub in next_hub.links.values() and next_hub.links['max'] < next_hub.links['incoming_drons'] else False
+        available_space = True if len(next_hub.drone_bay) < next_hub.max_drones else False
+
+            
+
+        
 
 
     

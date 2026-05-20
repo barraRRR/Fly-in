@@ -103,10 +103,14 @@ class Network(BaseModel):
             
             if hub_a and hub_b:
                 hub_a.links.append(
-                    {'target_hub': hub_b, 'max': max_link_capacity}
+                    {'target_hub': hub_b,
+                     'max': max_link_capacity,
+                     'incoming_drones': 0}
                     )
                 hub_b.links.append(
-                    {'target_hub': hub_a, 'max': max_link_capacity}
+                    {'target_hub': hub_a,
+                     'max': max_link_capacity,
+                     'incoming_drones': 0}
                     )
             
             for drone in self.start_hub.drone_bay:
