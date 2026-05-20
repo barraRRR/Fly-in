@@ -1,5 +1,5 @@
 from pathlib import Path
-from class_network_parser import Network
+from class_network import Network
 import json
 
 

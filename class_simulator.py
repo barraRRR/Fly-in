@@ -1,9 +1,9 @@
-from class_network_parser import Network, Hub, Drone, DroneStatus, Zone
+from class_network import Network, Hub, Drone, DroneStatus, Zone
 from enum import Enum
 from collections import deque
 
 
-class Simulation:
+class Simulatior:
     """
     """
     def __init__(self, map: str) -> None:
