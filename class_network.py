@@ -29,7 +29,7 @@ class Drone(BaseModel):
     current_hub: Optional[Hub] = Field(default=None)
     destination: Optional[Hub] = Field(default=None)
     visited_hubs: List[Hub] = Field(default_factory=list)
-    remaining_turns: int = Field(default=None)
+    remaining_turns: int = Field(default=0)
 
 
 class Hub(BaseModel):
