@@ -15,8 +15,9 @@ class Zone(Enum):
 
 class DroneStatus(Enum):
     STANDBY = 'standby'
-    DISPATCHED = 'dispatched'
-    TRANSIT = 'transit'
+    FLYING = 'flying'
+    RESTRICTED_FLIGHT = 'restricted_flight'
+    ARRIVED = 'arrived'
     DELIVERED = 'delivered'
 
 
@@ -26,8 +27,9 @@ class Drone(BaseModel):
     id: str
     status: DroneStatus
     current_hub: Optional[Hub] = Field(default=None)
-    flying_to: Optional[Hub] = Field(default=None)
+    destination: Optional[Hub] = Field(default=None)
     visited_hubs: List[Hub] = Field(default_factory=list)
+    remaining_turns: int = Field(default=None)
 
 
 class Hub(BaseModel):
