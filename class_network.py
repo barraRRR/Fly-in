@@ -24,12 +24,43 @@ class DroneStatus(Enum):
 class Drone(BaseModel):
     """
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     id: str
     status: DroneStatus
+    remaining_turns: int = Field(default=0)
+    current_path: Path = Field(default=None)
     current_hub: Optional[Hub] = Field(default=None)
+    origin: Optional[Hub] = Field(default=None)
     destination: Optional[Hub] = Field(default=None)
     visited_hubs: List[Hub] = Field(default_factory=list)
-    remaining_turns: int = Field(default=0)
+
+    def _take_off(self) -> None:
+        """
+        """
+        self.current_hub.drone_bay.remove(self)
+        self.current_hub = None
+        if self.destination.zone == Zone.RESTRICTED:
+            self.status = DroneStatus.RESTRICTED_FLIGHT
+        else:
+            self.status = DroneStatus.FLYING
+
+    def _arrive(self) -> None:
+        """
+        """
+        if self.destination.hub_type != "end_hub":
+            self.destination.drone_bay.append(self)
+        self.current_hub = self.destination
+        self.destination = None
+        self.status = (
+            DroneStatus.DELIVERED if self.current_hub.hub_type == "end_hub"
+            else DroneStatus.ARRIVED
+        )        
+        self.visited_hubs.append(self.current_hub)
+        
+        if self.current_path and self.status == DroneStatus.ARRIVED:
+            self.current_path._path_status(self.current_hub)
+            self.remaining_turns = self.current_path.turns_to_finish
 
 
 class Hub(BaseModel):
@@ -46,7 +77,67 @@ class Hub(BaseModel):
     links: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     drone_bay: Optional[List[Drone]] = Field(default_factory=list)
 
+    def __eq__(self, other):
+        if not isinstance(other, Hub):
+            return False
+        return self.name == other.name
+    
+    def __hash__(self):
+        return hash(self.name)
 
+
+class Path:
+    """
+    """
+    def __init__(self, id: int, hubs_on_route: List[Hub]) -> None:
+        self.id = f"route_{id:03d}"
+        self.hubs_on_route = hubs_on_route
+    
+    def _path_status(self,
+                      current_hub: Hub) -> None:
+        """
+        """
+        hub_index = self.hubs_on_route.index(current_hub)
+        self.hubs_on_route = self.hubs_on_route[hub_index:]
+        self.next_hub = self.hubs_on_route[1]
+        self.turns_to_finish = (int(
+            len([hub for hub in self.hubs_on_route]) +
+            len([hub for hub in self.hubs_on_route if
+                 hub.zone == Zone.RESTRICTED]) - 1)
+        )
+        self.priority_next = True if self.next_hub.zone == Zone.PRIORITY else False
+        self.available_space, self.available_links = self._is_hub_accessible()
+    
+    def _is_hub_accessible(self) -> Tuple[bool, bool]:
+        """
+        """
+        origin = self.hubs_on_route[0]
+        dest = self.hubs_on_route[1]
+        available_space = (
+            True if len(dest.drone_bay) < dest.max_drones else False
+        )
+        for link in origin.links:
+            if (link['target_hub'] == dest and
+                (link['max'] > link['incoming_drones'])):
+                    return (available_space, True)
+        return (available_space, False)
+    
+    def __eq__(self, other):
+        """
+        """
+        if not isinstance(other, Path):
+            return False
+        return (
+            self.id == other.id and
+            self.turns_to_finish == other.turns_to_finish
+        )
+    
+    def __hash__(self):
+        """
+        """
+        return hash((self.id, self.turns_to_finish))
+    
+    
 class Network(BaseModel):
     """
     ...
@@ -118,7 +209,6 @@ class Network(BaseModel):
             for drone in self.start_hub.drone_bay:
                 drone.current_hub = self.start_hub
         
-        print(' OK')
         return self
     
     def get_map_info(self) -> str:

@@ -10,8 +10,4 @@ print(net.get_map_info())
 """
 
 sim = Simulator("./maps/easy/01_linear_path.txt")
-print(sim.net.get_map_info())
-
-print(len(sim.all_paths))
-
 sim.start_simulation()

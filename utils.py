@@ -1,4 +1,5 @@
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Generator
+from itertools import count
 import sys
 import json
 
@@ -23,3 +24,5 @@ def import_texts(language: str) -> Tuple[Dict, Dict, Dict]:
 
 
 UX, STATUS, ERROR = import_texts('en')
+
+path_id_generator = count(1)
