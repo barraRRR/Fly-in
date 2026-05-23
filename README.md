@@ -75,3 +75,9 @@ All maps are designed to be solvable with a well-implemented algorithm. However:
 - **Medium**: 10-30 simulation turns depending on optimization
 - **Hard**: 30+ simulation turns, focus on finding valid solutions
 - **Challenger**: **Record to beat: 45 turns** for "The Impossible Dream" - designed for algorithmic research
+
+
+
+
+
+mejorar algoritmo para que los drones decidan si esperar o 

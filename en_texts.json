@@ -1,8 +1,14 @@
 {
     "ux": {},
     "status": {
-        "loading_map": "Loading {map}...",
-        "parsing_map": "Parsing {map}..."
+        "loading_map": "Loading map...",
+        "parsing_map": "Parsing {map}...",
+        "turn": "TURN: {turn_num}",
+        "total_turns": "Total turns: {total_turns}",
+        "hub_full": "Hub {hub_name} is at maximum capacity",
+        "no_links": "No available links from {origin} to {destination}",
+        "drone_blocked": "Drone {drone_id} cannot proceed",
+        "loading_texts": "Loading texts..."
     },
     "error": {
         "parser": {
@@ -13,10 +19,20 @@
             "duplicate_hub_names": "Hub names must be unique.",
             "duplicate_hub_coords": "Hubs cannot share the same coordinates.",
             "duplicate_connection": "Connections cannot be repeated.",
-            "self_link": "Invalid link: {point_a} and {point_b} are the same hub.",
-            "missing_hub": "Invalid link: hub '{point}' not found.",
+            "duplicate_link": "Connection between {point_a} and {point_b} already exists.",
+            "self_link": "Invalid connection: {point_a} and {point_b} are the same hub.",
+            "missing_hub": "Invalid connection: hub '{point}' not found.",
             "missing_start_hub": "There must be exactly one start hub.",
             "missing_end_hub": "There must be exactly one end hub."
+        },
+        "simulator": {
+            "hub_full_error": "Cannot proceed: next hub '{hub_name}' has no available capacity.",
+            "no_links_available": "Cannot proceed: no active connections available to the next hub.",
+            "drone_cant_move": "Cannot proceed: path is blocked due to capacity or connection constraints.",
+            "no_available_paths": "Critical error: no available paths for drone '{drone_id}'."
+        },
+        "critical": {
+            "texts_load_fail": "Critical error: failed to load language texts. Aborting launch..."
         }
     }
 }

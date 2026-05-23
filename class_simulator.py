@@ -1,8 +1,7 @@
 from class_network import Network, Hub, Drone, DroneStatus, Zone
 from class_parser import MapParser
+from utils import ERROR
 from typing import List, Dict, Set, Tuple
-from enum import Enum
-from collections import deque
 
 
 class HubFullError(Exception):
@@ -21,12 +20,15 @@ class Simulator:
     """
     """
     def __init__(self, map: str) -> None:
-        self.turn_num: int = 0
+        self.turn_num: int = 1
         self.map = MapParser(map)
         self.net = Network(**self.map.data)
-        self.drones_left: List[Drone] = [d for d in self.net.start_hub.drone_bay]
+        self.drones_left: List[Drone] = [
+            d for d in self.net.start_hub.drone_bay
+            ]
         self.drones_in_motion: List[Drone] = []
-        self.all_paths: List[Dict[str, List[Hub], int, int]] = self._find_all_paths()
+        self.all_paths: List[
+            Dict[str, List[Hub], int, int]] = self._find_all_paths()
 
         for drone in self.drones_left:
             drone.remaining_turns = (
@@ -72,7 +74,9 @@ class Simulator:
         dict_paths = []
         count = 0
         for path in all_paths:
-            total_hubs, total_turns, _, _, _ = self._route_status(path[0], path)
+            total_hubs, total_turns, _, _, _, _ = (
+                self._route_status(path[0], path)
+            )
             id = f"route_{count:03d}"
             dict_paths.append(
                 {
@@ -85,7 +89,9 @@ class Simulator:
 
         return dict_paths
 
-    def _route_status(self, current_hub: Hub, route: List[Hub]) -> Tuple[bool, int]:
+    def _route_status(self,
+                      current_hub: Hub,
+                      route: List[Hub]) -> Tuple[bool, int]:
         """
         """
         hub_index = route.index(current_hub)
@@ -96,21 +102,26 @@ class Simulator:
             len([hub for hub in hubs_left if hub.zone == Zone.RESTRICTED])
         )
         priority_next = True if next_hub.zone == Zone.PRIORITY else False
-        available_space = True if len(next_hub.drone_bay) < next_hub.max_drones else False
+        available_space, available_links = (
+            self._is_hub_accessible(current_hub, next_hub)
+        )
 
         return (
             hubs_left, remaining_turns, next_hub,
-            priority_next, available_space
+            priority_next, available_space, available_links
             )
     
-    def _available_connection(self, origin: Hub, dest: Hub) -> bool:
+    def _is_hub_accessible(self, origin: Hub, dest: Hub) -> Tuple[bool, bool]:
         """
         """
+        available_space = (
+            True if len(dest.drone_bay) < dest.max_drones else False
+        )
         for link in origin.links:
             if (link['target_hub'] == dest and
                 (link['max'] > link['incoming_drones'])):
-                    return True
-        return False
+                    return (available_space, True)
+        return (available_space, False)
     
     def _flight_planner(self, drone: Drone) -> None:
         """
@@ -120,50 +131,51 @@ class Simulator:
             drone.current_hub in path["path"]
             ]
         if available_paths == None:
-            raise DroneCantMove("No available paths")
+            raise DroneCantMove(
+                ERROR['simulator']['no_available_paths'].format(
+                drone_id=drone.id
+            ))
 
         evaluated_paths = []
         for path_template in available_paths:
-            path = path_template.copy()
             (
-                hubs_left,
-                remaining_turns,
-                next_hub,
-                priority_next,
-                available_space,
-            ) = self._route_status(drone.current_hub, path["path"])
+                hubs_left, remaining_turns, next_hub, priority_next,
+                available_space, available_connection
+            ) = self._route_status(drone.current_hub, path_template["path"])
         
-            path["path"] = hubs_left
-            path["total_turns"] = remaining_turns
-            path["next_hub"] = next_hub
-            path["priority_next"] = priority_next
-            path["available_space"] = available_space
-            path["total_hubs"] = len(hubs_left)
-            path["available_connection"] = self._available_connection(
-                drone.current_hub, next_hub
-            )
-            evaluated_paths.append(path)
-            print("Available connection: ", path["available_connection"])
-            print("Available space:      ", path["available_space"])
+            evaluated_paths.append({
+                **path_template,
+                "path": hubs_left,
+                "total_hubs": len(hubs_left),
+                "total_turns": remaining_turns,
+                "next_hub": next_hub,
+                "priority_next": priority_next,
+                "available_space": available_space,
+                "available_connection": available_connection,
+            })
 
         available_space_paths = [
             p for p in evaluated_paths if p["available_space"]
             ]
         if not available_space_paths:
-            raise HubFullError("ERROR: Not enough room in next hub")
+            raise HubFullError(ERROR['simulator']['hub_full_error'].format(
+                hub_name=next_hub.name
+            ))
         
         available_connection_paths = [
             p for p in evaluated_paths if p["available_connection"]
             ]
         if not available_connection_paths:
-            raise NoLinksAvailableError("ERROR: No links available with next hub")
+            raise NoLinksAvailableError(
+                ERROR['simulator']['no_links_available']
+                )
         
         valid_paths = [
             p for p in evaluated_paths
             if p["available_space"] and p["available_connection"]
         ]
         if not valid_paths:
-            raise DroneCantMove("ERROR: next hub does not have enough room or links availabe")
+            raise DroneCantMove(ERROR['simulator']['drone_cant_move'])
 
         priority_choices = [
             p for p in valid_paths if p["priority_next"]
@@ -184,7 +196,6 @@ class Simulator:
         for link in b.links:
             if link['target_hub'] == a:
                 link['incoming_drones'] += mod
-
 
     def _take_off(self, drone: Drone) -> None:
         """
@@ -210,15 +221,13 @@ class Simulator:
             DroneStatus.DELIVERED if drone.current_hub.hub_type == "end_hub"
             else DroneStatus.ARRIVED
         )
+        self.drones_in_motion.remove(drone)
         if drone.status == DroneStatus.DELIVERED:
             self.drones_left.remove(drone)
-        elif drone.status == DroneStatus.ARRIVED:
-            self.drones_in_motion.remove(drone)
-
+        
         self._set_link(drone.current_hub, drone.visited_hubs[-1], False)
         
         drone.visited_hubs.append(drone.current_hub)
-
 
     def _simulate_turn(self) -> None:
         """
@@ -238,32 +247,31 @@ class Simulator:
             try:
                 fewer_turns = available_drones.pop()
                 print(self._get_dron_info(fewer_turns))
-                print(f"{fewer_turns.id} remaining turns: {fewer_turns.remaining_turns}")
                 self._flight_planner(fewer_turns)
                 self._take_off(fewer_turns)
                 print(self._get_dron_info(fewer_turns))
 
-            except (IndexError, DroneCantMove, HubFullError, NoLinksAvailableError) as e:
+            except (
+                IndexError, DroneCantMove,
+                HubFullError, NoLinksAvailableError
+                ) as e:
                 print(e)
                 continue
-
 
         print(self._output_turn())
 
         for drone in list(self.drones_in_motion):
             if drone.status == DroneStatus.FLYING:
                 self._arrive(drone)
-        
-    
+
     def start_simulation(self) -> None:
         """
         """
-        for drone in self.drones_left:
-            print(f"{drone.id}: {drone.remaining_turns}")
-        for _ in range(10):
+        while self.drones_left:
             print(f"TURN: {self.turn_num:03d}")
             self._simulate_turn()
             print()
+        print(f"Total turns: {self.turn_num}")
     
     def _output_turn(self) -> str:
         """
@@ -272,7 +280,8 @@ class Simulator:
         for drone in self.drones_in_motion:
             string = (
                 f"{drone.id}-"
-                f"{drone.destination.name if drone.destination else "on hold"}"
+                f"{drone.destination.name if drone.destination
+                   else "on hold"}"
                 )
             drone_strings.append(string)
         
@@ -285,4 +294,5 @@ class Simulator:
             f"{drone.id} STATUS: {drone.status.name}\n"
             f"  - current position: {drone.current_hub.name if drone.current_hub else "flying"}\n"
             f"  - destination:      {drone.destination.name if drone.destination else "on hold"}\n"
+            f"  - remaining turns:  {drone.remaining_turns}\n"
         )

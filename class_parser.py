@@ -1,5 +1,6 @@
 from utils import STATUS, ERROR
 from typing import Dict, List
+import json
 
 
 class MapParser:
@@ -23,9 +24,9 @@ class MapParser:
         }
 
         with open(self.path, 'r') as f:
-            print(' OK')
             print(STATUS['parsing_map'].format(map=self.path), end='')
             raw = f.readlines()
+        print(' OK')
         
         for line in raw:
             clean_line = line.strip()
