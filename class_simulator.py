@@ -5,7 +5,6 @@ from utils import ERROR, path_id_generator
 from typing import List, Dict, Set, Tuple
 
 
-
 class HubFullError(Exception):
     pass
 
