@@ -14,11 +14,18 @@ class Zone(Enum):
 
 
 class DroneStatus(Enum):
+    
     STANDBY = 'standby'
     FLYING = 'flying'
     RESTRICTED_FLIGHT = 'restricted_flight'
     ARRIVED = 'arrived'
     DELIVERED = 'delivered'
+
+class HubType(Enum):
+
+    START = 'start_hub'
+    HUB = 'hub'
+    END = 'end_hub'
 
 
 class Drone(BaseModel):
@@ -48,12 +55,12 @@ class Drone(BaseModel):
     def _arrive(self) -> None:
         """
         """
-        if self.destination.hub_type != "end_hub":
+        if self.destination.hub_type != HubType.END:
             self.destination.drone_bay.append(self)
         self.current_hub = self.destination
         self.destination = None
         self.status = (
-            DroneStatus.DELIVERED if self.current_hub.hub_type == "end_hub"
+            DroneStatus.DELIVERED if self.current_hub.hub_type == HubType.END
             else DroneStatus.ARRIVED
         )        
         self.visited_hubs.append(self.current_hub)
@@ -68,7 +75,7 @@ class Hub(BaseModel):
     """
     Parses hub information from raw data
     """
-    hub_type: Literal['start_hub', 'hub', 'end_hub']
+    hub_type: HubType
     name: str = Field(pattern=r"^[^- ]*$")
     coords: Tuple[int, int] = Field(default_factory=tuple)
     color: Optional[str] = Field(default=None, pattern=r"^[^ ]*$")
