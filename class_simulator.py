@@ -1,4 +1,5 @@
 from class_network import Network, Hub, Path, Drone, DroneStatus, Zone
+from class_gui import Gui
 from class_parser import MapParser
 from copy import deepcopy
 from utils import ERROR, path_id_generator
@@ -34,7 +35,10 @@ class Simulator:
         for drone in self.drones_left:
             drone.remaining_turns = min_turns
             drone.visited_hubs.append(self.net.start_hub)
-    
+
+        gui = Gui(self.net)
+        gui.print_map()
+
     def _find_all_paths(
             self,
             start: Hub = None,
