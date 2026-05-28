@@ -1,6 +1,5 @@
 from utils import STATUS, ERROR
 from typing import Dict, List
-import json
 
 
 class MapParser:
@@ -51,7 +50,7 @@ class MapParser:
                 payload['start_hub'] = self._parse_hub(line)
                 for i in range(payload['nb_drones']):
                     payload['start_hub']['drone_bay'].append(
-                        {"id": f"D_{(i + 1):03d}", "status": "standby"}
+                        {"id": f"D{(i + 1)}", "status": "standby"}
                     )
 
             elif key == 'end_hub' and not payload['end_hub']:
