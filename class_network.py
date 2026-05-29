@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ValidationError, model_validator, ConfigDict, ConfigDict
-from typing import Protocol, Literal, Optional, Tuple, Any, List, Dict, ClassVar
+from typing import Protocol, Literal, Optional, Tuple, Any, List, Dict, ClassVar, Union
 from utils import UX, STATUS, ERROR
 from enum import Enum
 import sys
@@ -96,8 +96,11 @@ class Hub(BaseModel):
 class Path:
     """
     """
-    def __init__(self, id: int, hubs_on_route: List[Hub]) -> None:
-        self.id = f"route_{id:03d}"
+    def __init__(self, id: Union[int, str], hubs_on_route: List[Hub]) -> None:
+        if isinstance(id, str):
+            self.id = id
+        if isinstance(id, int):
+            self.id = f"route_{id:03d}"
         self.hubs_on_route = hubs_on_route
     
     def _path_status(self,

@@ -16,17 +16,23 @@ class Gui:
             [self.net.start_hub] + self.net.hub + [self.net.end_hub]
         )
         
-        # Calcular tamaño dinámico basado en hubs
         max_x = max(hub.coords[0] for hub in self.all_hubs)
         max_y = max(hub.coords[1] for hub in self.all_hubs)
         
-        # Calcular dimensiones: cada hub ocupa HUB_WIDTH x HUB_HEIGHT + metadata
         width = (max_x + 1) * self.HUB_WIDTH + self.MARGIN * 2
         height = (max_y + 1) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN * 2
         
         self.col, self.row = width, height
         self.grid: List[List[str]] = [[" " for _ in range(self.col)] for _ in range(self.row)]
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
+        self._map_contour()
+        self._place_hubs()
+        self._place_links()
+    
+    def update(self) -> None:
+        """
+        """
+        self.grid: List[List[str]] = [[" " for _ in range(self.col)] for _ in range(self.row)]
         self._map_contour()
         self._place_hubs()
         self._place_links()
@@ -53,31 +59,20 @@ class Gui:
                     self.grid[y][x] = sides
                 else:
                     self.grid[y][x] = " "
-    
-    def _hub(self, hub: Hub) -> List[List[str]]:
-        """
-        Retorna las líneas ASCII del hub centradas.
-        """
-        ascii_hub_lines = [
-            "  __  ",
-            ' |""| ',
-            "''''''"
-        ]
-        return [line.center(self.HUB_WIDTH) for line in ascii_hub_lines]
-    
+        
     def _hub_metadata(self, hub: Hub) -> List[str]:
         """
         Retorna las líneas de metadata del hub centradas.
         """
         occupied = "●" * len(hub.drone_bay)
         available_space = "○" * (hub.max_drones - len(hub.drone_bay))
-        bay_str = f"[{occupied}{available_space}]"
-        h_zone = f"[{hub.zone.name.upper()}]"
+        bay = f"[{occupied}{available_space}]"
+        zone = f"[{hub.zone.name.upper()}]"
 
         meta_lines = [
             hub.name.center(self.HUB_WIDTH),
-            h_zone.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else "",
-            bay_str.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else ""
+            zone.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else "",
+            bay.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else ""
         ]
         
         return meta_lines
@@ -86,6 +81,12 @@ class Gui:
         """
         Dibuja los hubs y sus metadatos en el grid.
         """
+        hub_lines = [
+            "  __  ".center(self.HUB_WIDTH),
+            ' |""| '.center(self.HUB_WIDTH),
+            "''''''".center(self.HUB_WIDTH)
+        ]
+
         for hub in self.all_hubs:
             x, y = hub.coords
             grid_x = x * self.HUB_WIDTH + 2
@@ -93,7 +94,6 @@ class Gui:
 
             self.hub_pos_map[hub] = (grid_x, grid_y)
             
-            hub_lines = self._hub(hub)
             for i, line in enumerate(hub_lines):
                 row = grid_y + i
                 if row < self.row - 1:
@@ -217,10 +217,6 @@ class Gui:
                     # Solo dibuja si el espacio está vacío
                     if self.grid[y_info][x_pos] == " ":
                         self.grid[y_info][x_pos] = char
-
-    
-
-
     
     def print_map(self) -> None:
         for row in self.grid:

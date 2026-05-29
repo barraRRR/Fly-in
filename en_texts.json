@@ -3,12 +3,21 @@
     "status": {
         "loading_map": "Loading map...",
         "parsing_map": "Parsing {map}...",
-        "turn": "TURN: {turn_num}",
+        "turn": "TURN: {turn_num:03d}",
         "total_turns": "Total turns: {total_turns}",
-        "hub_full": "Hub {hub_name} is at maximum capacity",
-        "no_links": "No available links from {origin} to {destination}",
-        "drone_blocked": "Drone {drone_id} cannot proceed",
+        "drone_flying_restricted": "{drone_id} [FLYING]: Completing restricted flight to {destination}. Available again in next turn.",
+        "drone_evaluating": "{drone_id} [STATUS]: Evaluating path status...",
+        "drone_flying": "{drone_id} [FLYING]: Flying to {destination}...",
+        "drone_delivered": "{drone_id} [SUCCESS]: Drone successfully delivered!",
+        "infinite_loop_error": "ERROR: Infinite loop detected in available_drones. Remaining drones: {count}",
         "loading_texts": "Loading texts..."
+    },
+    "warning": {
+        "simulator": {
+            "hub_full": "Hub '{hub_name}' is at maximum capacity",
+            "no_links": "No available links from current hub",
+            "path_blocked": "Path is blocked due to capacity or connection constraints"
+        }
     },
     "error": {
         "parser": {
@@ -25,13 +34,8 @@
             "missing_start_hub": "There must be exactly one start hub.",
             "missing_end_hub": "There must be exactly one end hub."
         },
-        "simulator": {
-            "hub_full_error": "Cannot proceed: next hub '{hub_name}' has no available capacity.",
-            "no_links_available": "Cannot proceed: no active connections available to the next hub.",
-            "drone_cant_move": "Cannot proceed: path is blocked due to capacity or connection constraints.",
-            "no_available_paths": "Critical error: no available paths for drone '{drone_id}'."
-        },
         "critical": {
+            "no_available_paths": "Critical error: no available paths for drone '{drone_id}'.",
             "texts_load_fail": "Critical error: failed to load language texts. Aborting launch..."
         }
     }
