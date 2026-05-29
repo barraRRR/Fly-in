@@ -24,7 +24,7 @@ def main() -> None:
     drone_status: List[str] = []
     pannel: str = ""
     while sim.drones_left:
-        refresh(gui, pannel)
+        refresh(gui, sim, pannel)
         for event in sim.simulate_turn():
             if event["type"] == "drone_status":
                 drone_status.insert(0, event["msg"])
@@ -40,16 +40,28 @@ def main() -> None:
                 col_left=drone_status,
                 col_right=turn_list
             )
-            refresh(gui, pannel)
+            refresh(gui, sim, pannel)
             sleep(DELAY)
 
 
-def refresh(gui: Gui, pannel: str) -> None:
+def refresh(gui: Gui, sim: Simulator, pannel: str) -> None:
     """
     """
     clear()
     gui.print_map()
-    print(pannel) 
+    print(info_panel(gui, sim))
+    print(pannel)
+
+
+def info_panel(gui: Gui, sim: Simulator) -> str:
+    """
+    """
+    col = gui.col
+    title = " STATUS ".center(col, "=")
+    info_drones = f"Drones left: {len(sim.drones_left)}".center(col)
+    bottom = "".center(col, "=")
+
+    return "\n".join([title, info_drones, bottom])
 
         
 def text_pannel(net: Network,
