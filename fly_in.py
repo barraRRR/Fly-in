@@ -16,7 +16,7 @@ print(net.get_map_info())
 
 
 def main() -> None:
-    map = MapParser("./maps/easy/01_linear_path.txt")
+    map = MapParser("./maps/easy/02_simple_fork.txt")
     net = Network(**map.data)
     sim = Simulator(net)
     gui = Gui(net)

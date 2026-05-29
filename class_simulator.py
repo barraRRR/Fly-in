@@ -146,7 +146,8 @@ class Simulator:
             drone.status = DroneStatus.STANDBY
             available_drones.append(drone)
 
-        available_drones.sort(key=lambda p: p.remaining_turns, reverse=True)
+        available_drones.sort(key=lambda p: p.id, reverse=True)
+        available_drones.sort(key=lambda p: p.remaining_turns)
 
         while available_drones:
             try:
