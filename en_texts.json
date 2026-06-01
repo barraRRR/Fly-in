@@ -5,9 +5,9 @@
         "parsing_map": "Parsing {map}...",
         "turn": "TURN: {turn_num:03d}",
         "total_turns": "Total turns: {total_turns}",
-        "drone_flying_restricted": "{drone_id} [FLYING]: Completing restricted flight to {destination}. Available again in next turn.",
-        "drone_evaluating": "{drone_id} [STATUS]: Evaluating path status...",
-        "drone_flying": "{drone_id} [FLYING]: Flying to {destination}...",
+        "drone_flying_restricted": "{drone_id} [FLYING] : Completing restricted flight to {destination}. Available again in next turn.",
+        "drone_evaluating": "{drone_id} [STATUS] : Evaluating path status...",
+        "drone_flying": "{drone_id} [FLYING] : Flying to {destination}...",
         "drone_delivered": "{drone_id} [SUCCESS]: Drone successfully delivered!",
         "infinite_loop_error": "ERROR: Infinite loop detected in available_drones. Remaining drones: {count}",
         "loading_texts": "Loading texts..."

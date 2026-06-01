@@ -114,22 +114,27 @@ class Gui:
                         col = grid_x + j
                         if col < self.col - 1:
                             self.grid[row][col] = char
-    
+
     def _place_links(self) -> None:
         """
         """
-        hub_dict = {hub.name: hub for hub in self.all_hubs}
+        established_links = []
+        sorted_hubs = sorted(
+            self.all_hubs, key=lambda h: h.coords[1], reverse=True
+            )
+        for hub in sorted_hubs:
+            all_dest = [link["target_hub"] for link in hub.links]
+            all_dest.sort(key=lambda p: p.coords[1])
 
-        for connection in self.net.connections:
-            hub_a_name = connection["point_a"]
-            hub_b_name = connection["point_b"]
-    
-            hub_a = hub_dict.get(hub_a_name)
-            hub_b = hub_dict.get(hub_b_name)
+            while all_dest:
+                dest = all_dest.pop()
+                pair = tuple(sorted([hub.name, dest.name]))
+                if pair in established_links:
+                    continue
+                established_links.append(pair)
 
-            if hub_a and hub_b:
-                info = self._get_link_info(hub_a, hub_b)
-                self._draw_smart_line(hub_a, hub_b, info)
+                info = self._get_link_info(hub, dest)
+                self._draw_smart_line(hub, dest, info)
     
     def _draw_horizontal_line(
             self,
@@ -222,10 +227,23 @@ class Gui:
         """
         """
         midway = (x2 - x1) // 2
-        up = ["┘", "┌"]
-        down = ["┐", "└"]
-        dir = up if y2 < y1 else down
-
+        up_right = ["┘", "┌"]
+        up_left = ["└", "┐"]
+        down_right = ["┐", "└"]
+        down_left = ["┌", "┘"]
+        circle_rigth = ["┐", "┘"]
+        
+        if y2 < y1 and x1 < x2:
+            dir = up_right
+        elif y2 < y1 and x1 > x2:
+            dir = up_left
+        elif y2 > y1 and x1 < x2:
+            dir = down_right
+        elif x1 == x2:
+            dir = circle_rigth
+        else:
+            dir = down_left
+        
         x1, y1 = self._draw_horizontal_line(
             x1, x1 + midway, y1, "─", dir[0]
             )
@@ -249,10 +267,13 @@ class Gui:
         if grid_x1 < grid_x2:
             x1 = grid_x1 + 14
             x2 = grid_x2 + 5
-        else:
+        elif grid_x1 > grid_x2:
             x1 = grid_x1 + 5
             x2 = grid_x2 + 14
-        
+        else:
+            x1 = grid_x1 + 14
+            x2 = grid_x2 + 14
+
         y1 = grid_y1 + hub_height_center
         y2 = grid_y2 + hub_height_center
 
@@ -261,17 +282,21 @@ class Gui:
             y1 -= 1
         while self.grid[y2][x2] == "●":
             y2 -= 1
+
+        (left_x, left_y), (right_x, right_y) = sorted([(x1, y1), (x2, y2)])
         
-        x1, y1 = self._draw_gentle_exit(x1, y1, exit=True)
-        x2, y2 = self._draw_gentle_exit(x2, y2, exit=False)
+        x1, y1 = self._draw_gentle_exit(left_x, left_y, exit=True)
+        x2, y2 = self._draw_gentle_exit(right_x, right_y, exit=(left_x == right_x))
 
         if y1 == y2:
             self._draw_horizontal_line(x1, x2, y1, "─", "─", info)
         
+        """
         elif x1 > x2:
             self._draw_s_line(x1, x2, y1, y2, info)
         else:
-            self._draw_z_line(x1, x2, y1, y2, info)
+        """
+        self._draw_z_line(x1, x2, y1, y2, info)
         
     def _get_link_info(self, hub_a: Hub, hub_b: Hub) -> str:
         """
