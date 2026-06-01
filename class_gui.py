@@ -165,12 +165,12 @@ class Gui:
                     continue
                 if y == y1:
                     self.grid[y][x] = top_char
-                if y == y2:
+                elif y == y2:
                     self.grid[y][x] = bottom_char
                 else:
                     self.grid[y][x] = "│"
         
-        return (x, y)
+        return (x, y2)
     
     def _draw_gentle_exit(
             self,
@@ -241,13 +241,13 @@ class Gui:
         midway = (x2 - x1) // 2
         first_corner = "┘" if y2 < y1 else "┐"
         x1, y1 = self._draw_horizontal_line(
-            x1, x1 + midway, y1, "-", first_corner
+            x1, x1 + midway, y1, "─", first_corner
             )
         second_corner = "┌" if first_corner == "┘" else "└"
         x1, y1 = self._draw_vertical_line(
             x1, y1, y2, first_corner, second_corner
             )
-        self._draw_horizontal_line(x1, x2, y1, second_corner, "-")
+        self._draw_horizontal_line(x1, x2, y1, second_corner, "─")
 
     
     def _get_link_info(self, hub_a: Hub, hub_b: Hub) -> str:
