@@ -243,14 +243,22 @@ class Gui:
             dir = circle_rigth
         else:
             dir = down_left
-        
-        x1, y1 = self._draw_horizontal_line(
-            x1, x1 + midway, y1, "─", dir[0]
-            )
-        x1, y1 = self._draw_vertical_line(
-            x1, y1, y2, dir[0], dir[1], info
-            )
-        self._draw_horizontal_line(x1, x2, y1, dir[1], "─")
+
+        if (x2 - x1) >= (y2 - y1):
+            x1, y1 = self._draw_horizontal_line(
+                x1, x2, y1, "─", dir[0], info
+                )
+            x1, y1 = self._draw_vertical_line(
+                x1, y1, y2, dir[0], dir[1]
+                )
+        else:
+            x1, y1 = self._draw_vertical_line(
+                x1, y1, y2, dir[0], dir[1], info
+                )
+            x1, y1 = self._draw_horizontal_line(
+                x1, x2, y1, "─", dir[0]
+                )
+        #self._draw_horizontal_line(x1, x2, y1, dir[1], "─")
     
     def _draw_smart_line(
             self,

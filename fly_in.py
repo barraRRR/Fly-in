@@ -16,7 +16,7 @@ print(net.get_map_info())
 
 
 def main() -> None:
-    map = MapParser("./maps/hard/03_ultimate_challenge.txt")
+    map = MapParser("./maps/hard/02_capacity_hell.txt")
     net = Network(**map.data)
     sim = Simulator(net)
     gui = Gui(net)
