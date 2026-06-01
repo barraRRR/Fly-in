@@ -16,7 +16,7 @@ print(net.get_map_info())
 
 
 def main() -> None:
-    map = MapParser("./maps/easy/02_simple_fork.txt")
+    map = MapParser("./maps/easy/03_basic_capacity.txt")
     net = Network(**map.data)
     sim = Simulator(net)
     gui = Gui(net)
@@ -41,7 +41,7 @@ def main() -> None:
                 col_right=turn_list
             )
             refresh(gui, sim, pannel)
-            # sleep(DELAY)
+            sleep(DELAY)
 
 
 def refresh(gui: Gui, sim: Simulator, pannel: str) -> None:
@@ -60,6 +60,7 @@ def info_panel(gui: Gui, sim: Simulator, margin: int = 6) -> str:
     sub_size = col // 2 - (margin // 2)
     title = " STATUS ".center(col, "=")
     info_drones = f"Drones left: {len(sim.drones_left)}".center(col)
+    info_turns = f"Total turns: {sim.turn_num}".center(col)
     bottom = "".center(col, "=")
 
     def place_subtitle(sub1: str, sub2: str, size: int, margin: int) -> str:
@@ -76,7 +77,7 @@ def info_panel(gui: Gui, sim: Simulator, margin: int = 6) -> str:
             )
     subtitles = place_subtitle("DRONE LOG", "TURN LOG", sub_size, margin)
 
-    return "\n".join([title, info_drones, bottom, subtitles])
+    return "\n".join([title, info_drones, info_turns, bottom, subtitles])
 
         
 def text_pannel(net: Network,
