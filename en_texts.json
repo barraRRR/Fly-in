@@ -14,7 +14,7 @@
     },
     "warning": {
         "simulator": {
-            "hub_full": "Hub '{hub_name}' is at maximum capacity",
+            "hub_full": "Hubs on route are at maximum capacity",
             "no_links": "No available links from current hub",
             "path_blocked": "Path is blocked due to capacity or connection constraints"
         }

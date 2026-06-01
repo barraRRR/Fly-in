@@ -212,6 +212,7 @@ class Simulator:
             "type": "end_turn",
             "msg": output
         }
+        sleep(DELAY * 3)
     
     def _output_turn(self) -> str:
         """

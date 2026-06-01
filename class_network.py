@@ -123,14 +123,15 @@ class Path:
         """
         origin = self.hubs_on_route[0]
         dest = self.hubs_on_route[1]
-        available_space = (
-            True if len(dest.drone_bay) < dest.max_drones else False
-        )
+        available_space = False
+        available_links = False
         for link in origin.links:
-            if (link['target_hub'] == dest and
-                (link['max'] > link['incoming_drones'])):
-                    return (available_space, True)
-        return (available_space, False)
+            if link['target_hub'] == dest:
+                if (link['max'] > link['incoming_drones']):
+                    available_links = True
+                if link['incoming_drones'] + len(dest.drone_bay) < dest.max_drones:
+                    available_space = True
+                return (available_space, available_links)
     
     def __eq__(self, other):
         """
