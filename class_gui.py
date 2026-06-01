@@ -5,7 +5,7 @@ from typing import List, Dict, Tuple
 class Gui:
     """
     """
-    HUB_WIDTH = 19
+    HUB_WIDTH = 20
     HUB_HEIGHT = 6
     METADATA_HEIGHT = 3
     MARGIN = 2
@@ -16,11 +16,18 @@ class Gui:
             [self.net.start_hub] + self.net.hub + [self.net.end_hub]
         )
         
+        # Calcular rango de coordenadas
+        min_x = min(hub.coords[0] for hub in self.all_hubs)
         max_x = max(hub.coords[0] for hub in self.all_hubs)
+        min_y = min(hub.coords[1] for hub in self.all_hubs)
         max_y = max(hub.coords[1] for hub in self.all_hubs)
         
-        width = (max_x + 1) * self.HUB_WIDTH + self.MARGIN * 2
-        height = (max_y + 1) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN * 2
+        self.min_x = min_x
+        self.min_y = min_y
+        
+        # Calcular dimensiones del grid
+        width = (max_x - min_x + 1) * self.HUB_WIDTH + self.MARGIN * 2
+        height = (max_y - min_y + 1) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN * 2
         
         self.col, self.row = width, height
         self.grid: List[List[str]] = [[" " for _ in range(self.col)] for _ in range(self.row)]
@@ -33,6 +40,7 @@ class Gui:
         """
         """
         self.grid: List[List[str]] = [[" " for _ in range(self.col)] for _ in range(self.row)]
+        self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
         self._map_contour()
         self._place_hubs()
         self._place_links()
@@ -89,8 +97,8 @@ class Gui:
 
         for hub in self.all_hubs:
             x, y = hub.coords
-            grid_x = x * self.HUB_WIDTH + 2
-            grid_y = y * self.HUB_HEIGHT + 2
+            grid_x = (x - self.min_x) * self.HUB_WIDTH + self.MARGIN
+            grid_y = (y - self.min_y) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN
 
             self.hub_pos_map[hub] = (grid_x, grid_y)
             
@@ -153,27 +161,16 @@ class Gui:
         if grid_x1 < grid_x2:
             # hub_a a la izquierda, hub_b a la derecha
             x1 = grid_x1 + 13  # Link derecho de hub_a
-            x2 = grid_x2 + 4   # Link izquierdo de hub_b
+            x2 = grid_x2 + 6   # Link izquierdo de hub_b
         else:
             # hub_a a la derecha, hub_b a la izquierda
-            x1 = grid_x1 + 4   # Link izquierdo de hub_a
+            x1 = grid_x1 + 6   # Link izquierdo de hub_a
             x2 = grid_x2 + 13  # Link derecho de hub_b
         
         y1 = hub_height_center
         y2 = grid_y2 + 1  # Centro vertical de hub_b
-        
-        # Dibujar línea horizontal
-        for x in range(min(x1, x2), max(x1, x2) + 1):
-            if 1 < x < self.col - 1 and 1 < y1 < self.row - 1:
-                # Si es el punto inicial o final, usa bolita
-                if x == x1 or x == x2:
-                    self.grid[y1][x] = "●"
-                # Si el espacio no está vacío, skipea (no sobrescribe)
-                elif self.grid[y1][x] != " ":
-                    continue
-                # Si está vacío, usa guión
-                else:
-                    self.grid[y1][x] = "-"
+
+        self._draw_simple_horizontal_line(x1, x2, y1, y2)
         
         # Dibujar línea vertical (empieza desde el siguiente punto después de la horizontal)
         step = 1 if y1 < y2 else -1
@@ -190,20 +187,8 @@ class Gui:
         if 1 < x2 < self.col - 1 and 1 < y2 < self.row - 1:
             self.grid[y2][x2] = "●"
         
-        # Dibuja el dron a mitad de la línea horizontal (encima)
-        x_mid = (min(x1, x2) + max(x1, x2)) // 2
-        drone = "x●x"
-        y_drone = y1 - 1  # Encima de la línea horizontal
-        
-        drone_start = x_mid - len(drone) // 2
-        for i, char in enumerate(drone):
-            x_pos = drone_start + i
-            if 1 < x_pos < self.col - 1 and 1 < y_drone < self.row - 1:
-                # Solo dibuja si el espacio está vacío
-                if self.grid[y_drone][x_pos] == " ":
-                    self.grid[y_drone][x_pos] = char
-        
         # Dibuja la información de conexiones a mitad de la línea horizontal (debajo)
+        x_mid = (min(x1, x2) + max(x1, x2)) // 2
         link_info = self._get_link_info(hub_a, hub_b)
         if link_info:
             y_info = y1 + 1  # Debajo de la línea horizontal
@@ -217,6 +202,29 @@ class Gui:
                     # Solo dibuja si el espacio está vacío
                     if self.grid[y_info][x_pos] == " ":
                         self.grid[y_info][x_pos] = char
+    
+    def _draw_simple_horizontal_line(
+            self,
+            x1: int, x2: int,
+            y1: int, y2: int,
+            left_char: str = "●",
+            right_char: str = "●") -> None:
+        """
+        """
+        # Dibujar línea horizontal
+        for x in range(min(x1, x2), max(x1, x2) + 1):
+            if 1 < x < self.col - 1 and 1 < y1 < self.row - 1:
+                # Si es el punto inicial o final, usa bolita
+                if x == x1:
+                    self.grid[y1][x] = left_char
+                if x == x2:
+                    self.grid[y1][x] = right_char
+                # Si el espacio no está vacío, skipea (no sobrescribe)
+                elif self.grid[y1][x] != " ":
+                    continue
+                # Si está vacío, usa guión
+                else:
+                    self.grid[y1][x] = "─"
     
     def print_map(self) -> None:
         for row in self.grid:

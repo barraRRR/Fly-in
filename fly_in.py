@@ -41,7 +41,7 @@ def main() -> None:
                 col_right=turn_list
             )
             refresh(gui, sim, pannel)
-            sleep(DELAY)
+            # sleep(DELAY)
 
 
 def refresh(gui: Gui, sim: Simulator, pannel: str) -> None:
@@ -53,15 +53,30 @@ def refresh(gui: Gui, sim: Simulator, pannel: str) -> None:
     print(pannel)
 
 
-def info_panel(gui: Gui, sim: Simulator) -> str:
+def info_panel(gui: Gui, sim: Simulator, margin: int = 6) -> str:
     """
     """
     col = gui.col
+    sub_size = col // 2 - (margin // 2)
     title = " STATUS ".center(col, "=")
     info_drones = f"Drones left: {len(sim.drones_left)}".center(col)
     bottom = "".center(col, "=")
 
-    return "\n".join([title, info_drones, bottom])
+    def place_subtitle(sub1: str, sub2: str, size: int, margin: int) -> str:
+        return (
+            "┌" + "-" * (size - 2) + "┐" +
+            " " * margin +
+            "┌" + "-" * (size - 2) + "┐\n" +
+            "|" + sub1.center(size - 2) + "|" +
+            " " * margin +
+            "|" + sub2.center(size - 2) + "|\n" +
+            "└" + "-" * (size - 2) + "┘" +
+            " " * margin +
+            "└" + "-" * (size - 2) + "┘\n"
+            )
+    subtitles = place_subtitle("DRONE LOG", "TURN LOG", sub_size, margin)
+
+    return "\n".join([title, info_drones, bottom, subtitles])
 
         
 def text_pannel(net: Network,
@@ -69,12 +84,12 @@ def text_pannel(net: Network,
                 gui: Gui,
                 col_left: List[str],
                 col_right: List[str],
-                margin: int = 5) -> str:
+                margin: int = 6) -> str:
     """
     """
     col, row = gui.col, gui.row
     max_lines = 10
-    max_char_line = min(30, int(col / 2 - margin))
+    max_char_line = col // 2 - (margin // 2)
     
     col_left = slice_str(col_left, max_char_line, max_lines)
     col_right = slice_str(col_right, max_char_line, max_lines)
