@@ -128,14 +128,16 @@ class Gui:
             hub_b = hub_dict.get(hub_b_name)
 
             if hub_a and hub_b:
-                self._draw_smart_line(hub_a, hub_b)
+                info = self._get_link_info(hub_a, hub_b)
+                self._draw_smart_line(hub_a, hub_b, info)
     
     def _draw_horizontal_line(
             self,
             x1: int, x2: int,
             y: int,
             left_char: str = "●",
-            right_char: str = "●") -> Tuple[int, int]:
+            right_char: str = "●",
+            info: str = None) -> Tuple[int, int]:
         """
         """
         for x in range(min(x1, x2), max(x1, x2) + 1):
@@ -149,6 +151,10 @@ class Gui:
                 else:
                     self.grid[y][x] = "─"
         
+        if info is not None:
+            midway = (x1 + x2) // 2
+            self._place_link_info(midway, y, info)
+        
         return (x, y)
     
     def _draw_vertical_line(
@@ -156,12 +162,15 @@ class Gui:
             x: int,
             y1: int, y2: int,
             top_char: str = "●",
-            bottom_char: str = "●") -> Tuple[int, int]:
+            bottom_char: str = "●",
+            info: str = None) -> Tuple[int, int]:
         """
         """
         for y in range(min(y1, y2), max(y1, y2) + 1):
             if 1 < x < self.col - 1 and 1 < y < self.row - 1:
-                if self.grid[y][x] != " ":
+                if self.grid[y][x] == "─":
+                    self.grid[y][x] = "┼"
+                elif self.grid[y][x] != " ":
                     continue
                 if y == y1:
                     self.grid[y][x] = top_char
@@ -169,6 +178,11 @@ class Gui:
                     self.grid[y][x] = bottom_char
                 else:
                     self.grid[y][x] = "│"
+        
+        if info is not None:
+            midway = (y1 + y2) // 2
+            self._place_link_info(x, midway, info)
+
         
         return (x, y2)
     
@@ -190,10 +204,41 @@ class Gui:
         
         return (x1 + (length * step), y1)
     
+    def _draw_s_line(
+            self, x1: int, x2: int, y1: int, y2: int, info: str) -> None:
+        """
+        """
+        midway = (y2 - y1) // 2
+        up = ["┘", "┐", "└", "┌"]
+        down = ["┐", "┘", "┌", "└"]
+        dir = up if y2 < y1 else down
+
+        x1, y1 = self._draw_vertical_line(x1, y1, y1 + midway, dir[0], dir[1])
+        x1, y1 = self._draw_horizontal_line(x1, x2, y1, dir[1], dir[2], info)
+        self._draw_vertical_line(x1, y1, y2, dir[2], dir[3])
+    
+    def _draw_z_line(
+            self, x1: int, x2: int, y1: int, y2: int, info: str) -> None:
+        """
+        """
+        midway = (x2 - x1) // 2
+        up = ["┘", "┌"]
+        down = ["┐", "└"]
+        dir = up if y2 < y1 else down
+
+        x1, y1 = self._draw_horizontal_line(
+            x1, x1 + midway, y1, "─", dir[0]
+            )
+        x1, y1 = self._draw_vertical_line(
+            x1, y1, y2, dir[0], dir[1], info
+            )
+        self._draw_horizontal_line(x1, x2, y1, dir[1], "─")
+    
     def _draw_smart_line(
             self,
             hub_a: Hub,
-            hub_b: Hub) -> None:
+            hub_b: Hub,
+            info: str) -> None:
         """
         """
         grid_x1, grid_y1 = self.hub_pos_map[hub_a]
@@ -221,35 +266,13 @@ class Gui:
         x2, y2 = self._draw_gentle_exit(x2, y2, exit=False)
 
         if y1 == y2:
-            self._draw_horizontal_line(x1, x2, y1, "─", "─")
+            self._draw_horizontal_line(x1, x2, y1, "─", "─", info)
+        
         elif x1 > x2:
-            self._draw_s_line(x1, x2, y1, y2)
+            self._draw_s_line(x1, x2, y1, y2, info)
         else:
-            self._draw_z_line(x1, x2, y1, y2)
-    
-    def _draw_s_line(self, x1: int, x2: int, y1: int, y2: int) -> None:
-        """
-        """
-        midway = (y2 - y1) // 2
-        x1, y1 = self._draw_vertical_line(x1, y1, y1 + midway, "o", "d")
-        x1, y1 = self._draw_horizontal_line(x1, x2, y1, "o", "d")
-        self._draw_vertical_line(x1, y1, y2)
-    
-    def _draw_z_line(self, x1: int, x2: int, y1: int, y2: int) -> None:
-        """
-        """
-        midway = (x2 - x1) // 2
-        first_corner = "┘" if y2 < y1 else "┐"
-        x1, y1 = self._draw_horizontal_line(
-            x1, x1 + midway, y1, "─", first_corner
-            )
-        second_corner = "┌" if first_corner == "┘" else "└"
-        x1, y1 = self._draw_vertical_line(
-            x1, y1, y2, first_corner, second_corner
-            )
-        self._draw_horizontal_line(x1, x2, y1, second_corner, "─")
-
-    
+            self._draw_z_line(x1, x2, y1, y2, info)
+        
     def _get_link_info(self, hub_a: Hub, hub_b: Hub) -> str:
         """
         """
@@ -259,6 +282,16 @@ class Gui:
                 incoming = link['incoming_drones']
                 return f"{incoming}/{max_connections}"
         return ""
+    
+    def _place_link_info(
+            self, x: int, y: int, info: str) -> None:
+        """
+        """
+        mid = len(info) // 2
+        for i, char in enumerate(info):
+            x_pos = x + i - mid
+            if 0 <= x_pos <= self.col and 0 <= y <= self.row:
+                self.grid[y][x + i - mid] = char
     
     def print_map(self) -> None:
         for row in self.grid:
