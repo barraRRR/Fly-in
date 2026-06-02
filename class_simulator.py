@@ -1,6 +1,7 @@
 from class_network import Network, Hub, Path, Drone, DroneStatus, Zone
 from copy import copy
 from utils import ERROR, WARNING, STATUS, DELAY, path_id_generator
+import utils
 from typing import List, Dict, Set, Tuple, Generator
 from time import sleep
 
@@ -212,7 +213,7 @@ class Simulator:
             "type": "end_turn",
             "msg": output
         }
-        sleep(DELAY * 3)
+        sleep(utils.PACE * 3)
     
     def _output_turn(self) -> str:
         """

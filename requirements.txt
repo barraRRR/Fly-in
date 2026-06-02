@@ -2,3 +2,4 @@ pydantic
 flake8
 mypy
 pytest
+simple-term-menu

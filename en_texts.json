@@ -1,5 +1,18 @@
 {
-    "ux": {},
+    "ux": {
+        "loading_ok": "OK",
+        "loading_fail": "FAIL",
+        "permission_denied": "❌ Permission denied",
+        "no_files_found": "❌ No folders or .txt files found",
+        "exit_option": "❌ Exit",
+        "press_enter": "Press ENTER to continue...",
+        "goodbye": "Thanks for evaluating Fly-in!",
+        "success": "SUCCESS!",
+        "size_warning": "WARNING: map size exceed 305 columns limit. It won't be displayed during simulation.",
+        "interrupt_hint": "Press [ctr + C] to end simulation",
+        "hub_data_found": "Looking for maps at {path}",
+        "hub_data_saved": "Hub data saved in hub_data.json!"
+    },
     "status": {
         "loading_map": "Loading map...",
         "parsing_map": "Parsing {map}...",

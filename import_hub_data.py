@@ -1,5 +1,6 @@
 from pathlib import Path
 from class_network import Network
+from utils import UX
 import json
 
 
@@ -21,7 +22,7 @@ def import_hub_data() -> None:
         valid_coords = set()
     path = Path('maps')
     
-    print(f"Looking for maps at {path}")
+    print(UX["hub_data_found"].format(path=path))
     for file in path.rglob('*.txt'):
         net = Network.parser(file)
         valid_names.update({hub.name for hub in net.hub})
@@ -40,7 +41,7 @@ def import_hub_data() -> None:
     with open('hub_data.json', 'w', encoding='utf-8') as j:
         json.dump(payload, j, indent=4, ensure_ascii=False)
     
-    print('Hub data saved in "hub_data.json"!')
+    print(UX["hub_data_saved"])
 
 
 if __name__ == '__main__':
