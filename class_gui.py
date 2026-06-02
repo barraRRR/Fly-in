@@ -246,7 +246,7 @@ class Gui:
 
         if (x2 - x1) >= (y2 - y1):
             x1, y1 = self._draw_horizontal_line(
-                x1, x2, y1, "─", dir[0], info
+                x1, x2, y1, "─", "─", info
                 )
             x1, y1 = self._draw_vertical_line(
                 x1, y1, y2, dir[0], dir[1]
@@ -256,7 +256,7 @@ class Gui:
                 x1, y1, y2, dir[0], dir[1], info
                 )
             x1, y1 = self._draw_horizontal_line(
-                x1, x2, y1, "─", dir[0]
+                x1, x2, y1, "─", "─"
                 )
         #self._draw_horizontal_line(x1, x2, y1, dir[1], "─")
     
@@ -298,13 +298,8 @@ class Gui:
 
         if y1 == y2:
             self._draw_horizontal_line(x1, x2, y1, "─", "─", info)
-        
-        """
-        elif x1 > x2:
-            self._draw_s_line(x1, x2, y1, y2, info)
         else:
-        """
-        self._draw_z_line(x1, x2, y1, y2, info)
+            self._draw_z_line(x1, x2, y1, y2, info)
         
     def _get_link_info(self, hub_a: Hub, hub_b: Hub) -> str:
         """
