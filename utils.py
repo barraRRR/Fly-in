@@ -76,12 +76,10 @@ def select_map_file() -> str:
         items = []
         paths = []
         
-        # Agregar opción para volver atrás
         if current_dir != maps_root:
             items.append("⬅️  Back to parent")
             paths.append("..")
         
-        # Listar carpetas y archivos
         try:
             entries = sorted(current_dir.iterdir())
             for entry in entries:
@@ -111,18 +109,15 @@ def select_map_file() -> str:
         
         selected = paths[idx]
         
-        # Si seleccionó "..", volver atrás
         if selected == "..":
             current_dir = current_dir.parent
             continue
         
-        # Si es carpeta, navegar adentro
         path = current_dir / selected
         if path.is_dir():
             current_dir = path
             continue
         
-        # Si es archivo, retornar la ruta
         if path.is_file() and path.suffix == ".txt":
             return str(path)
         
@@ -163,7 +158,7 @@ def goodbye() -> str:
     """
     """
     clear()
-    print()
+    print("\n\n")
     print(title(), end="\n" * 3)
     print(UX["goodbye"])
     sys.exit(0)

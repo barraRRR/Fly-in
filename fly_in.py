@@ -2,7 +2,7 @@ from class_network import Network, Drone, Hub
 from class_parser import MapParser
 from class_simulator import Simulator
 from class_gui import Gui
-from utils import clear, menu, select_map_file, welcome, goodbye, slice_str, PACE, FAST, DELAY, STATUS, WARNING, UX_MAX, UX_STD, UX
+from utils import clear, menu, wait_for_enter, select_map_file, welcome, goodbye, slice_str, PACE, FAST, DELAY, STATUS, WARNING, UX_MAX, UX_STD, UX
 from typing import List
 from time import sleep
 import sys
@@ -47,6 +47,8 @@ def main() -> None:
                     elif event["type"] == "end_turn":
                         drone_status.insert(0, f"[END OF TURN {sim.turn_num:03d}]")
                         turn_list.insert(0, event["msg"])
+                        if manual:
+                            wait_for_enter()
                     
                     gui.update()
                     pannel = text_pannel(
@@ -58,6 +60,8 @@ def main() -> None:
                     )
                     refresh(gui, sim, pannel)
                     sleep(utils.PACE)
+                    
+
             print(f"\n{UX['success']}\n".center(gui.col if gui.col < UX_MAX else UX_STD))
         except KeyboardInterrupt:
             pass
@@ -115,7 +119,7 @@ def refresh(gui: Gui, sim: Simulator, pannel: str) -> None:
         gui.print_map()
     print(info_panel(gui, sim))
     print(pannel)
-    print(f"\n{UX['interrupt_hint']}")
+    # print(f"\n{UX['interrupt_hint']}")
 
 
 def info_panel(
@@ -157,8 +161,8 @@ def text_pannel(net: Network,
     """
     """
     col = gui.col if gui.col < UX_MAX else UX_STD
-    row = gui.row
-    max_lines = 15
+    max_lines = 10
+    row = max_lines
     max_char_line = col // 2 - (margin // 2)
     
     col_left = slice_str(col_left, max_char_line, max_lines)
