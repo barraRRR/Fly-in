@@ -136,66 +136,53 @@ class Gui:
                 info = self._get_link_info(hub, dest)
                 self._draw_smart_line(hub, dest, info)
     
-    def _draw_horizontal_line(
+    def _draw_line(
             self,
-            x1: int, x2: int,
-            y: int,
-            left_char: str = "●",
-            right_char: str = "●",
+            x1: int, y1: int,
+            x2: int, y2: int, 
+            dir_hor: bool,
+            char1: str = "●",
+            char2: str = "●",
             info: str = None) -> Tuple[int, int]:
         """
         """
-        for x in range(min(x1, x2), max(x1, x2) + 1):
-            if 1 < x < self.col - 1 and 1 < y < self.row - 1:
-                if self.grid[y][x] != " ":
-                    continue
-                if x == x1:
-                    self.grid[y][x] = left_char
-                elif x == x2:
-                    self.grid[y][x] = right_char
-                else:
-                    self.grid[y][x] = "─"
+        if dir_hor:
+            for x in range(min(x1, x2), max(x1, x2) + 1):
+                if 1 < x < self.col - 1 and 1 < y1 < self.row - 1:
+                    if self.grid[y1][x] != " ":
+                        continue
+                    if x == x1:
+                        self.grid[y1][x] = char1
+                    elif x == x2:
+                        self.grid[y1][x] = char2
+                    else:
+                        self.grid[y1][x] = "─"
+        else:
+            for y in range(min(y1, y2), max(y1, y2) + 1):
+                if 1 < x < self.col - 1 and 1 < y < self.row - 1:
+                    if self.grid[y][x1] == "─":
+                        self.grid[y][x1] = "┼"
+                    elif self.grid[y][x1] != " ":
+                        continue
+                    if y == y1:
+                        self.grid[y][x1] = char1
+                    elif y == y2:
+                        self.grid[y][x1] = char2
+                    else:
+                        self.grid[y][x1] = "│"
         
         if info is not None:
-            midway = (x1 + x2) // 2
-            self._place_link_info(midway, y, info)
+            midway_x = (x1 + x2) // 2
+            midway_y = (y1 + y2) // 2
+            self._place_link_info(midway_x, midway_y, info)
         
-        return (x, y)
-    
-    def _draw_vertical_line(
-            self,
-            x: int,
-            y1: int, y2: int,
-            top_char: str = "●",
-            bottom_char: str = "●",
-            info: str = None) -> Tuple[int, int]:
-        """
-        """
-        for y in range(min(y1, y2), max(y1, y2) + 1):
-            if 1 < x < self.col - 1 and 1 < y < self.row - 1:
-                if self.grid[y][x] == "─":
-                    self.grid[y][x] = "┼"
-                elif self.grid[y][x] != " ":
-                    continue
-                if y == y1:
-                    self.grid[y][x] = top_char
-                elif y == y2:
-                    self.grid[y][x] = bottom_char
-                else:
-                    self.grid[y][x] = "│"
-        
-        if info is not None:
-            midway = (y1 + y2) // 2
-            self._place_link_info(x, midway, info)
-
-        
-        return (x, y2)
+        return (x1, y1, x2, y2)
     
     def _draw_gentle_exit(
             self,
             x1: int, y1: int,
             exit: bool,
-            length: int = 4) -> Tuple[int, int]:
+            length: int = 2) -> Tuple[int, int]:
         """
         """
         self.grid[y1][x1] = "●"
@@ -208,19 +195,6 @@ class Gui:
                     self.grid[y1][x] = "─"
         
         return (x1 + (length * step), y1)
-    
-    def _draw_s_line(
-            self, x1: int, x2: int, y1: int, y2: int, info: str) -> None:
-        """
-        """
-        midway = (y2 - y1) // 2
-        up = ["┘", "┐", "└", "┌"]
-        down = ["┐", "┘", "┌", "└"]
-        dir = up if y2 < y1 else down
-
-        x1, y1 = self._draw_vertical_line(x1, y1, y1 + midway, dir[0], dir[1])
-        x1, y1 = self._draw_horizontal_line(x1, x2, y1, dir[1], dir[2], info)
-        self._draw_vertical_line(x1, y1, y2, dir[2], dir[3])
     
     def _draw_z_line(
             self, x1: int, x2: int, y1: int, y2: int, info: str) -> None:
@@ -259,6 +233,22 @@ class Gui:
                 x1, x2, y1, "─", "─"
                 )
         #self._draw_horizontal_line(x1, x2, y1, dir[1], "─")
+    
+    def _is_safe(self, x1: int, x2: int, y1: int, y2, dir_char: str) -> bool:
+        """
+        """
+        danger = ["─", "┌", "┐", "└", "┘", "●"]
+        if dir_char == "─":
+            for x in range(min(x1, x2), max(x1, x2) + 1):
+                if self[y][x] in danger + [dir_char]:
+                    return False
+            return True
+        elif dir_char == "│":
+            for y in range(min(y1, y2), max(y1, y2) + 1):
+                if self[y][x1] in danger + [dir_char]:
+                    return False
+            return True
+        
     
     def _draw_smart_line(
             self,

@@ -170,3 +170,14 @@ def slice_str(str_list: List[str], max_char_line: int, max_lines: int) -> List[s
     str_list = str_list[:max_lines]
     new = [line for s in str_list for line in wrap(s, max_char_line)]
     return new
+
+
+def offset_sequence(max_offset=None):
+    """
+    """
+    yield 0
+    offset = 1
+    while max_offset is None or offset <= max_offset:
+        yield offset
+        yield -offset
+        offset += 1

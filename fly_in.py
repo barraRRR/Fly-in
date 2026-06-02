@@ -48,6 +48,7 @@ def main() -> None:
                         drone_status.insert(0, f"[END OF TURN {sim.turn_num:03d}]")
                         turn_list.insert(0, event["msg"])
                         if manual:
+                            print()
                             wait_for_enter()
                     
                     gui.update()
