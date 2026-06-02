@@ -102,7 +102,7 @@ def configure_ux(gui: Gui) -> int:
     print("\n" + "═" * col)
     print("CONFIGURE SIMULATION".center(col))
     print("═" * col, end="\n\n")
-    idx = menu("Manual", "Automatic", "Direct to the point")
+    idx = menu(["Manual", "Automatic", "Direct to the point"])
     return idx
 
 

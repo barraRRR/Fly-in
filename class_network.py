@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ValidationError, model_validator, ConfigDict, ConfigDict
+from pydantic import BaseModel, Field, ValidationError, model_validator, ConfigDict
 from typing import Protocol, Literal, Optional, Tuple, Any, List, Dict, ClassVar, Union
 from utils import UX, STATUS, ERROR
 from enum import Enum
@@ -28,48 +28,6 @@ class HubType(Enum):
     END = 'end_hub'
 
 
-class Drone(BaseModel):
-    """
-    """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-    
-    id: str
-    status: DroneStatus
-    remaining_turns: int = Field(default=0)
-    current_path: Path = Field(default=None)
-    current_hub: Optional[Hub] = Field(default=None)
-    origin: Optional[Hub] = Field(default=None)
-    destination: Optional[Hub] = Field(default=None)
-    visited_hubs: List[Hub] = Field(default_factory=list)
-
-    def _take_off(self) -> None:
-        """
-        """
-        self.current_hub.drone_bay.remove(self)
-        self.current_hub = None
-        if self.destination.zone == Zone.RESTRICTED:
-            self.status = DroneStatus.RESTRICTED_FLIGHT
-        else:
-            self.status = DroneStatus.FLYING
-
-    def _arrive(self) -> None:
-        """
-        """
-        if self.destination.hub_type != HubType.END:
-            self.destination.drone_bay.append(self)
-        self.current_hub = self.destination
-        self.destination = None
-        self.status = (
-            DroneStatus.DELIVERED if self.current_hub.hub_type == HubType.END
-            else DroneStatus.ARRIVED
-        )        
-        self.visited_hubs.append(self.current_hub)
-        
-        if self.current_path and self.status == DroneStatus.ARRIVED:
-            self.current_path._path_status(self.current_hub)
-            self.remaining_turns = self.current_path.turns_to_finish
-
-
 class Hub(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     """
@@ -82,7 +40,7 @@ class Hub(BaseModel):
     max_drones: Optional[int] = Field(default=1, ge=1)
     zone: Optional[Zone] = Zone.NORMAL
     links: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
-    drone_bay: Optional[List[Drone]] = Field(default_factory=list)
+    drone_bay: Optional[List['Drone']] = Field(default_factory=list)
 
     def __eq__(self, other):
         if not isinstance(other, Hub):
@@ -147,7 +105,49 @@ class Path:
         """
         """
         return hash((self.id, self.turns_to_finish))
+
+
+class Drone(BaseModel):
+    """
+    """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     
+    id: str
+    status: DroneStatus
+    remaining_turns: int = Field(default=0)
+    current_path: Path = Field(default=None)
+    current_hub: Optional[Hub] = Field(default=None)
+    origin: Optional[Hub] = Field(default=None)
+    destination: Optional[Hub] = Field(default=None)
+    visited_hubs: List[Hub] = Field(default_factory=list)
+
+    def _take_off(self) -> None:
+        """
+        """
+        self.current_hub.drone_bay.remove(self)
+        self.current_hub = None
+        if self.destination.zone == Zone.RESTRICTED:
+            self.status = DroneStatus.RESTRICTED_FLIGHT
+        else:
+            self.status = DroneStatus.FLYING
+
+    def _arrive(self) -> None:
+        """
+        """
+        if self.destination.hub_type != HubType.END:
+            self.destination.drone_bay.append(self)
+        self.current_hub = self.destination
+        self.destination = None
+        self.status = (
+            DroneStatus.DELIVERED if self.current_hub.hub_type == HubType.END
+            else DroneStatus.ARRIVED
+        )        
+        self.visited_hubs.append(self.current_hub)
+        
+        if self.current_path and self.status == DroneStatus.ARRIVED:
+            self.current_path._path_status(self.current_hub)
+            self.remaining_turns = self.current_path.turns_to_finish
+
     
 class Network(BaseModel):
     """
@@ -238,10 +238,10 @@ class Network(BaseModel):
                 data += f"        max_drones: {h.max_drones}\n"
         data += f"  - links:\n"
         for c in self.connections:
-            data += f"    · {c["point_a"]} - {c["point_b"]}"
+            data += f"    · {c['point_a']} - {c['point_b']}"
             data += (
                 " [max_link_capacity="
-                f"{c.get("max_link_capacity",1)}]\n"
+                f"{c.get('max_link_capacity',1)}]\n"
                 )
         
         return data

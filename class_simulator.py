@@ -41,7 +41,7 @@ class Simulator:
             visited: Set[Hub] = None,
             current_path: List[Hub] = None,
             all_paths: List[List[Hub]] = None
-            ) -> List[Dict[str, List[Hub]], int, int]:
+            ) -> List[Path]:
         """
         """
         if start is None:
@@ -222,9 +222,8 @@ class Simulator:
         for drone in self.drones_in_motion:
             string = (
                 f"{drone.id}-"
-                f"{drone.destination.name if drone.destination
-                   else "on hold"}"
-                )
+                f"{drone.destination.name if drone.destination else 'on hold'}"
+            )
             drone_strings.append(string)
-        
+
         return " ".join(drone_strings)
