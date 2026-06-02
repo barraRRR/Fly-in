@@ -65,15 +65,15 @@ def info_panel(gui: Gui, sim: Simulator, margin: int = 6) -> str:
 
     def place_subtitle(sub1: str, sub2: str, size: int, margin: int) -> str:
         return (
-            "┌" + "-" * (size - 2) + "┐" +
+            "┌" + "─" * (size - 2) + "┐" +
             " " * margin +
-            "┌" + "-" * (size - 2) + "┐\n" +
+            "┌" + "─" * (size - 2) + "┐\n" +
             "|" + sub1.center(size - 2) + "|" +
             " " * margin +
             "|" + sub2.center(size - 2) + "|\n" +
-            "└" + "-" * (size - 2) + "┘" +
+            "└" + "─" * (size - 2) + "┘" +
             " " * margin +
-            "└" + "-" * (size - 2) + "┘\n"
+            "└" + "─" * (size - 2) + "┘\n"
             )
     subtitles = place_subtitle("DRONE LOG", "TURN LOG", sub_size, margin)
 
