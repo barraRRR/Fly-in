@@ -1,5 +1,6 @@
 from class_network import Network, Hub, HubType
 from typing import List, Dict, Tuple
+from colored import fg, attr, style
 
 
 class Gui:
@@ -133,122 +134,13 @@ class Gui:
                     continue
                 established_links.append(pair)
 
-                info = self._get_link_info(hub, dest)
-                self._draw_smart_line(hub, dest, info)
-    
-    def _draw_line(
-            self,
-            x1: int, y1: int,
-            x2: int, y2: int, 
-            dir_hor: bool,
-            char1: str = "●",
-            char2: str = "●",
-            info: str = None) -> Tuple[int, int]:
-        """
-        """
-        if dir_hor:
-            for x in range(min(x1, x2), max(x1, x2) + 1):
-                if 1 < x < self.col - 1 and 1 < y1 < self.row - 1:
-                    if self.grid[y1][x] != " ":
-                        continue
-                    if x == x1:
-                        self.grid[y1][x] = char1
-                    elif x == x2:
-                        self.grid[y1][x] = char2
-                    else:
-                        self.grid[y1][x] = "─"
-        else:
-            for y in range(min(y1, y2), max(y1, y2) + 1):
-                if 1 < x < self.col - 1 and 1 < y < self.row - 1:
-                    if self.grid[y][x1] == "─":
-                        self.grid[y][x1] = "┼"
-                    elif self.grid[y][x1] != " ":
-                        continue
-                    if y == y1:
-                        self.grid[y][x1] = char1
-                    elif y == y2:
-                        self.grid[y][x1] = char2
-                    else:
-                        self.grid[y][x1] = "│"
-        
-        if info is not None:
-            midway_x = (x1 + x2) // 2
-            midway_y = (y1 + y2) // 2
-            self._place_link_info(midway_x, midway_y, info)
-        
-        return (x1, y1, x2, y2)
-    
-    def _draw_gentle_exit(
-            self,
-            x1: int, y1: int,
-            exit: bool,
-            length: int = 2) -> Tuple[int, int]:
-        """
-        """
-        self.grid[y1][x1] = "●"
-        step = 1 if exit else -1
-        for x in range(x1 + step, x1 + length * step, step):
-            if 1 < x < self.col - 1 and 1 < y1 < self.row - 1:
-                if self.grid[y1][x] != " ":
-                    continue
-                else:
-                    self.grid[y1][x] = "─"
-        
-        return (x1 + (length * step), y1)
-    
-    def _draw_z_line(
-            self, x1: int, x2: int, y1: int, y2: int, info: str) -> None:
-        """
-        """
-        midway = (x2 - x1) // 2
-        up_right = ["┘", "┌"]
-        up_left = ["└", "┐"]
-        down_right = ["┐", "└"]
-        down_left = ["┌", "┘"]
-        circle_rigth = ["┐", "┘"]
-        
-        if y2 < y1 and x1 < x2:
-            dir = up_right
-        elif y2 < y1 and x1 > x2:
-            dir = up_left
-        elif y2 > y1 and x1 < x2:
-            dir = down_right
-        elif x1 == x2:
-            dir = circle_rigth
-        else:
-            dir = down_left
+                for link in hub.links:
+                    if link['target_hub'] == dest:
+                        max_connections = link['max']
+                        incoming = link['incoming_drones']
+                        info = f"{incoming}/{max_connections}"
 
-        if (x2 - x1) >= (y2 - y1):
-            x1, y1 = self._draw_horizontal_line(
-                x1, x2, y1, "─", "─", info
-                )
-            x1, y1 = self._draw_vertical_line(
-                x1, y1, y2, dir[0], dir[1]
-                )
-        else:
-            x1, y1 = self._draw_vertical_line(
-                x1, y1, y2, dir[0], dir[1], info
-                )
-            x1, y1 = self._draw_horizontal_line(
-                x1, x2, y1, "─", "─"
-                )
-        #self._draw_horizontal_line(x1, x2, y1, dir[1], "─")
-    
-    def _is_safe(self, x1: int, x2: int, y1: int, y2, dir_char: str) -> bool:
-        """
-        """
-        danger = ["─", "┌", "┐", "└", "┘", "●"]
-        if dir_char == "─":
-            for x in range(min(x1, x2), max(x1, x2) + 1):
-                if self[y][x] in danger + [dir_char]:
-                    return False
-            return True
-        elif dir_char == "│":
-            for y in range(min(y1, y2), max(y1, y2) + 1):
-                if self[y][x1] in danger + [dir_char]:
-                    return False
-            return True
-        
+                self._draw_smart_line(hub, dest, info)
     
     def _draw_smart_line(
             self,
@@ -257,6 +149,12 @@ class Gui:
             info: str) -> None:
         """
         """
+        self.corners = ["─", "┌", "┐", "└", "┘", "●"]
+        self.hor_line = "─"
+        self.ver_line = "│"
+        self.point = "●"
+        self.cross = "┼"
+
         grid_x1, grid_y1 = self.hub_pos_map[hub_a]
         grid_x2, grid_y2 = self.hub_pos_map[hub_b]
         
@@ -281,25 +179,104 @@ class Gui:
         while self.grid[y2][x2] == "●":
             y2 -= 1
 
-        (left_x, left_y), (right_x, right_y) = sorted([(x1, y1), (x2, y2)])
-        
-        x1, y1 = self._draw_gentle_exit(left_x, left_y, exit=True)
-        x2, y2 = self._draw_gentle_exit(right_x, right_y, exit=(left_x == right_x))
+        self.grid[y1][x1], self.grid[y2][x2] = "●", "●"
 
-        if y1 == y2:
-            self._draw_horizontal_line(x1, x2, y1, "─", "─", info)
-        else:
-            self._draw_z_line(x1, x2, y1, y2, info)
+        (x1, y1), (x2, y2) = sorted([(x1, y1), (x2, y2)])
         
-    def _get_link_info(self, hub_a: Hub, hub_b: Hub) -> str:
+        self._draw_z_line(x1, y1, x2, y2, info)
+
+    def _draw_line(
+            self,
+            x1: int, y1: int,
+            x2: int, y2: int,
+            dir_hor: bool,
+            char1: str = "●",
+            char2: str = "●",
+            info: str = None) -> Tuple[int, int, int, int]:
+        """ 
+        Draws a line (horizontal or vertical) on the grid.
+        """
+        if dir_hor:
+            start, end = min(x1, x2), max(x1, x2)
+            static_coord = y1
+            line_char = "─"
+            cross_char = "┼"
+        else:
+            start, end = min(y1, y2), max(y1, y2)
+            static_coord = x1
+            line_char = "│"
+            cross_char = "┼"
+
+        for i in range(start, end + 1):
+            if dir_hor:
+                x, y = i, static_coord
+            else:
+                x, y = static_coord, i
+
+            if not (1 < x < self.col - 1 and 1 < y < self.row - 1):
+                continue
+
+            current_char = self.grid[y][x]
+            
+            if current_char == line_char:
+                self.grid[y][x] = cross_char
+            elif current_char != " ":
+                continue
+
+            if (dir_hor and i == x1) or (not dir_hor and i == y1):
+                self.grid[y][x] = char1
+            elif (dir_hor and i == x2) or (not dir_hor and i == y2):
+                self.grid[y][x] = char2
+            else:
+                self.grid[y][x] = line_char
+
+        if info is not None:
+            midway_x = (x1 + x2) // 2
+            midway_y = (y1 + y2) // 2
+            self._place_link_info(midway_x, midway_y, info)
+        
+        return (x1, y1, x2, y2)
+    
+    def _draw_z_line(
+            self, x1: int, y1: int, x2: int, y2: int, info: str) -> None:
+        """
+        Draws a Z-shaped line (two segments, one horizontal and one vertical, or vice-versa).
+        """
+        up_right = ["┘", "┌"]
+        down_right = ["┐", "└"]
+        
+        if y2 < y1:
+            dir_chars = up_right
+        else:
+            dir_chars = down_right
+
+        abs_dx = abs(x2 - x1)
+        abs_dy = abs(y2 - y1)
+
+        if abs_dx >= abs_dy:
+            corner_x, corner_y = x2, y1
+  
+            self._draw_line(x1, y1, corner_x, corner_y, True, "─", dir_chars[0], info)
+            self._draw_line(corner_x, corner_y, x2, y2, False, dir_chars[0], dir_chars[1])
+        else:
+            corner_x, corner_y = x1, y2
+            self._draw_line(x1, y1, corner_x, corner_y, False, "│", dir_chars[0], info)
+            self._draw_line(corner_x, corner_y, x2, y2, True, dir_chars[0], dir_chars[1])
+    
+    def _is_safe(self, x1: int, y1: int, x2: int, y2, dir_char: str) -> bool:
         """
         """
-        for link in hub_a.links:
-            if link['target_hub'] == hub_b:
-                max_connections = link['max']
-                incoming = link['incoming_drones']
-                return f"{incoming}/{max_connections}"
-        return ""
+        danger = ["─", "┌", "┐", "└", "┘", "●"]
+        if dir_char == "─":
+            for x in range(min(x1, x2), max(x1, x2) + 1):
+                if self.grid[y1][x] in danger + [dir_char] and (x, y1) != (x2, y2):
+                    return False
+            return True
+        elif dir_char == "│":
+            for y in range(min(y1, y2), max(y1, y2) + 1):
+                if self.grid[y][x1] in danger + [dir_char] and (x1, y) != (x2, y2):
+                    return False
+            return True
     
     def _place_link_info(
             self, x: int, y: int, info: str) -> None:
@@ -311,6 +288,20 @@ class Gui:
             if 0 <= x_pos <= self.col and 0 <= y <= self.row:
                 self.grid[y][x + i - mid] = char
     
+    def _colored_char(c: str, color: str) -> str:
+        """
+        """
+        try:
+            color_code = style(color)
+            reset = style("reset")
+            return f"{color_code}{c}{reset}"
+        
+        except Exception:
+            return c
+    
     def print_map(self) -> None:
-        for row in self.grid:
-            print("".join(row))
+        for y, row in enumerate(self.grid):
+            for x, char in enumerate(row):
+                print(char, end="")
+            print()
+
