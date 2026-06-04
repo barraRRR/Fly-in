@@ -3,4 +3,4 @@ flake8
 mypy
 pytest
 simple-term-menu
-colored
+blessed

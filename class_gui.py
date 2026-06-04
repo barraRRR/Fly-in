@@ -1,6 +1,6 @@
 from class_network import Network, Hub, HubType
 from typing import List, Dict, Tuple
-from colored import fg, attr, style
+from blessed import Terminal
 
 
 class Gui:
@@ -29,7 +29,7 @@ class Gui:
         height = (max_y - min_y + 1) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN * 2
         
         self.col, self.row = width, height
-        self.grid: List[List[str]] = [[" " for _ in range(self.col)] for _ in range(self.row)]
+        self.grid: List[List[Dict[str, str | None]]] = [[{"char": " ", "color": None} for _ in range(self.col)] for _ in range(self.row)]
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
         self._map_contour()
         self._place_hubs()
@@ -38,7 +38,7 @@ class Gui:
     def update(self) -> None:
         """
         """
-        self.grid: List[List[str]] = [[" " for _ in range(self.col)] for _ in range(self.row)]
+        self.grid: List[List[Dict[str, str | None]]] = [[{"char": " ", "color": None} for _ in range(self.col)] for _ in range(self.row)]
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
         self._map_contour()
         self._place_hubs()
@@ -49,23 +49,31 @@ class Gui:
         """
         topbot, sides, top_l = "─", "│", "┌"
         top_r, bot_l, bot_r = "┐", "└", "┘"
+        cont_color = "white"
 
         for y in range(self.row):
             for x in range(self.col):
                 if y == 0 and x == 0:
-                    self.grid[y][x] = top_l
+                    self.grid[y][x]["char"] = top_l
+                    self.grid[y][x]["color"] = cont_color
                 elif y == 0 and x == (self.col - 1):
-                    self.grid[y][x] = top_r
+                    self.grid[y][x]["char"] = top_r
+                    self.grid[y][x]["color"] = cont_color
                 elif y == (self.row - 1) and x == 0:
-                    self.grid[y][x] = bot_l
+                    self.grid[y][x]["char"] = bot_l
+                    self.grid[y][x]["color"] = cont_color
                 elif y == (self.row - 1) and x == (self.col - 1):
-                    self.grid[y][x] = bot_r
+                    self.grid[y][x]["char"] = bot_r
+                    self.grid[y][x]["color"] = cont_color
                 elif y == 0 or y == (self.row - 1):
-                    self.grid[y][x] = topbot
+                    self.grid[y][x]["char"] = topbot
+                    self.grid[y][x]["color"] = cont_color
                 elif x == 0 or x == (self.col - 1):
-                    self.grid[y][x] = sides
+                    self.grid[y][x]["char"] = sides
+                    self.grid[y][x]["color"] = cont_color
                 else:
-                    self.grid[y][x] = " "
+                    self.grid[y][x]["char"] = " "
+                    self.grid[y][x]["color"] = cont_color
         
     def _hub_metadata(self, hub: Hub) -> List[str]:
         """
@@ -105,7 +113,8 @@ class Gui:
                     for j, char in enumerate(line):
                         col = grid_x + j
                         if col < self.col - 1:
-                            self.grid[row][col] = char
+                            self.grid[row][col]["char"] = char
+                            self.grid[row][col]["color"] = hub.color
             
             meta_lines = self._hub_metadata(hub)
             for i, line in enumerate(meta_lines):
@@ -114,7 +123,9 @@ class Gui:
                     for j, char in enumerate(line):
                         col = grid_x + j
                         if col < self.col - 1:
-                            self.grid[row][col] = char
+                            self.grid[row][col]["char"] = char
+                            self.grid[row][col]["color"] = None
+
 
     def _place_links(self) -> None:
         """
@@ -174,12 +185,12 @@ class Gui:
         y2 = grid_y2 + hub_height_center
 
         # traffic
-        while self.grid[y1][x1] == "●":
+        while self.grid[y1][x1]["char"] == "●":
             y1 -= 1
-        while self.grid[y2][x2] == "●":
+        while self.grid[y2][x2]["char"] == "●":
             y2 -= 1
 
-        self.grid[y1][x1], self.grid[y2][x2] = "●", "●"
+        self.grid[y1][x1]["char"], self.grid[y2][x2]["char"] = "●", "●"
 
         (x1, y1), (x2, y2) = sorted([(x1, y1), (x2, y2)])
         
@@ -216,19 +227,23 @@ class Gui:
             if not (1 < x < self.col - 1 and 1 < y < self.row - 1):
                 continue
 
-            current_char = self.grid[y][x]
+            current_char = self.grid[y][x]["char"]
             
             if current_char == line_char:
-                self.grid[y][x] = cross_char
+                self.grid[y][x]["char"] = cross_char
+                self.grid[y][x]["color"] = None
             elif current_char != " ":
                 continue
 
             if (dir_hor and i == x1) or (not dir_hor and i == y1):
-                self.grid[y][x] = char1
+                self.grid[y][x]["char"] = char1
+                self.grid[y][x]["color"] = None
             elif (dir_hor and i == x2) or (not dir_hor and i == y2):
-                self.grid[y][x] = char2
+                self.grid[y][x]["char"] = char2
+                self.grid[y][x]["color"] = None
             else:
-                self.grid[y][x] = line_char
+                self.grid[y][x]["char"] = line_char
+                self.grid[y][x]["color"] = None
 
         if info is not None:
             midway_x = (x1 + x2) // 2
@@ -269,12 +284,12 @@ class Gui:
         danger = ["─", "┌", "┐", "└", "┘", "●"]
         if dir_char == "─":
             for x in range(min(x1, x2), max(x1, x2) + 1):
-                if self.grid[y1][x] in danger + [dir_char] and (x, y1) != (x2, y2):
+                if self.grid[y1][x]["char"] in danger + [dir_char] and (x, y1) != (x2, y2):
                     return False
             return True
         elif dir_char == "│":
             for y in range(min(y1, y2), max(y1, y2) + 1):
-                if self.grid[y][x1] in danger + [dir_char] and (x1, y) != (x2, y2):
+                if self.grid[y][x1]["char"] in danger + [dir_char] and (x1, y) != (x2, y2):
                     return False
             return True
     
@@ -286,22 +301,19 @@ class Gui:
         for i, char in enumerate(info):
             x_pos = x + i - mid
             if 0 <= x_pos <= self.col and 0 <= y <= self.row:
-                self.grid[y][x + i - mid] = char
-    
-    def _colored_char(c: str, color: str) -> str:
-        """
-        """
-        try:
-            color_code = style(color)
-            reset = style("reset")
-            return f"{color_code}{c}{reset}"
-        
-        except Exception:
-            return c
+                self.grid[y][x + i - mid]["char"] = char
+                self.grid[y][x + i - mid]["color"] = None
     
     def print_map(self) -> None:
-        for y, row in enumerate(self.grid):
-            for x, char in enumerate(row):
-                print(char, end="")
+        """
+        """
+        term = Terminal()
+        for row in self.grid:
+            for c in row:
+                try:
+                    color_code = getattr(term, c["color"].lower(), term.normal)
+                    print(f"{color_code}{c["char"]}{term.normal}", end="")
+        
+                except Exception as e:
+                    print(c["char"], end="")
             print()
-
