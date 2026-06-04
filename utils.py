@@ -34,6 +34,7 @@ DELAY: float = 0.3
 FAST: float = 0.0
 PACE = DELAY
 path_id_generator = count(1)
+drone_helices = count(1)
 
 
 def clear() -> None:

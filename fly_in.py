@@ -38,10 +38,12 @@ def main() -> None:
         turn_list: List[str] = []
         drone_status: List[str] = []
         pannel: str = ""
+        frame = 0
         try:
             while sim.drones_left:
                 refresh(gui, sim, pannel)
                 for event in sim.simulate_turn():
+                    frame += 1
                     if event["type"] == "drone_status":
                         drone_status.insert(0, event["msg"])
                     elif event["type"] == "end_turn":
@@ -51,7 +53,7 @@ def main() -> None:
                             print()
                             wait_for_enter()
                     
-                    gui.update()
+                    gui.update(frame)
                     pannel = text_pannel(
                         net=net,
                         sim=sim,
