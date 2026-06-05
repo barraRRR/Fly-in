@@ -1,5 +1,5 @@
 from class_network import Network, Hub, HubType
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Set
 from blessed import Terminal
 from utils import drone_helices
 
@@ -15,7 +15,8 @@ class Gui:
         "drone_color": "#7B39EB",
         "warning": "#FE7733",
         "pale_green": "#C6FF36",
-        "deep_grren": "#243837"
+        "deep_grren": "#243837",
+        "line": "#FFFFFF"
     }
     
     def __init__(self, net: Network) -> None:
@@ -37,7 +38,14 @@ class Gui:
         
         self.col, self.row = width, height
         self.grid: List[List[Dict[str, str | None]]] = [[{"char": " ", "color": None} for _ in range(self.col)] for _ in range(self.row)]
+        self.grid_block: Set[Tuple[int, int]] = Set()
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
+
+        self.corners = ["─", "┌", "┐", "└", "┘"]
+        self.hor_line = "─"
+        self.ver_line = "│"
+        self.point = "■"
+        self.cross = "┼"
 
         self.term = Terminal()
         self._map_contour()
@@ -58,7 +66,7 @@ class Gui:
         """
         topbot, sides, top_l = "─", "│", "┌"
         top_r, bot_l, bot_r = "┐", "└", "┘"
-        cont_color = "white"
+        cont_color = self.PALETTE["line"]
 
         for y in range(self.row):
             for x in range(self.col):
@@ -124,6 +132,8 @@ class Gui:
                         if col < self.col - 1:
                             self.grid[row][col]["char"] = char
                             self.grid[row][col]["color"] = hub.color
+                            if not char.isspace():
+                                self.grid_block.add((col, row))
             
             meta_lines = self._hub_metadata(hub)
             for i, line in enumerate(meta_lines):
@@ -134,6 +144,8 @@ class Gui:
                         if col < self.col - 1:
                             self.grid[row][col]["char"] = char
                             self.grid[row][col]["color"] = self.PALETTE["drone_color"] if char == "●" else None
+                            if not char.isspace():
+                                self.grid_block.add((col, row))
 
 
     def _place_links(self, frame = 0) -> None:
@@ -160,135 +172,146 @@ class Gui:
                         incoming = sum([link['incoming_drones'], link['leaving_drones']])
                         info = f"{incoming}/{max_connections}"
 
-                self._draw_smart_line(hub, dest, info, frame)
-    
-    def _draw_smart_line(
-            self,
-            hub_a: Hub,
-            hub_b: Hub,
-            info: str,
-            frame: int = 0) -> None:
-        """
-        """
-        self.corners = ["─", "┌", "┐", "└", "┘", "●"]
-        self.hor_line = "─"
-        self.ver_line = "│"
-        self.point = "●"
-        self.cross = "┼"
+                grid_x1, grid_y1 = self.hub_pos_map[hub]
+                grid_x2, grid_y2 = self.hub_pos_map[dest]
+                
+                hub_height_center = 2
+                y1 = grid_y1 + hub_height_center
+                y2 = grid_y2 + hub_height_center
+                
+                if grid_x1 < grid_x2:
+                    x1 = grid_x1 + 14
+                    x2 = grid_x2 + 5
+                elif grid_x1 > grid_x2:
+                    x1 = grid_x1 + 5
+                    x2 = grid_x2 + 14
+                else:
+                    x1 = grid_x1 + 14
+                    x2 = grid_x2 + 14
 
-        grid_x1, grid_y1 = self.hub_pos_map[hub_a]
-        grid_x2, grid_y2 = self.hub_pos_map[hub_b]
-        
-        hub_height_center = 2
-        
-        if grid_x1 < grid_x2:
-            x1 = grid_x1 + 14
-            x2 = grid_x2 + 5
-        elif grid_x1 > grid_x2:
-            x1 = grid_x1 + 5
-            x2 = grid_x2 + 14
-        else:
-            x1 = grid_x1 + 14
-            x2 = grid_x2 + 14
+                # traffic
+                while self.grid[y1][x1]["char"] == "■":
+                    y1 -= 1
+                while self.grid[y2][x2]["char"] == "■":
+                    y2 -= 1
 
-        y1 = grid_y1 + hub_height_center
-        y2 = grid_y2 + hub_height_center
+                self.grid[y1][x1]["char"], self.grid[y2][x2]["char"] = "■", "■"
 
-        # traffic
-        while self.grid[y1][x1]["char"] == "●":
-            y1 -= 1
-        while self.grid[y2][x2]["char"] == "●":
-            y2 -= 1
+                line = self._find_line(x1, y1, x2, y2)
+                self._fill_line(line, info, frame)
+                self.grid_block.add((x1, y1), (x2, y2))
 
-        self.grid[y1][x1]["char"], self.grid[y2][x2]["char"] = "●", "●"
-
-        (x1, y1), (x2, y2) = sorted([(x1, y1), (x2, y2)])
-        
-        self._draw_z_line(x1, y1, x2, y2, info, frame)
-
-    def _draw_line(
+    def _find_line(
             self,
             x1: int, y1: int,
             x2: int, y2: int,
-            dir_hor: bool,
-            char1: str = "●",
-            char2: str = "●",
-            info: str = None,
-            frame: int = 0) -> Tuple[int, int, int, int]:
-        """ 
-        Draws a line (horizontal or vertical) on the grid.
+            visited: Set[Tuple[int, int]] = None,
+            path: List[Tuple[int, int]] = None,
+            ) -> List[Tuple[int, int]]:
         """
-        if dir_hor:
-            start, end = min(x1, x2), max(x1, x2)
-            static_coord = y1
-            line_char = "─"
-            cross_char = "┼"
-        else:
-            start, end = min(y1, y2), max(y1, y2)
-            static_coord = x1
-            line_char = "│"
-            cross_char = "┼"
-
-        for i in range(start, end + 1):
-            if dir_hor:
-                x, y = i, static_coord
-            else:
-                x, y = static_coord, i
-
-            if not (1 < x < self.col - 1 and 1 < y < self.row - 1):
-                continue
-
-            current_char = self.grid[y][x]["char"]
-            
-            if current_char == line_char:
-                self.grid[y][x]["char"] = cross_char
-                self.grid[y][x]["color"] = None
-            elif current_char != " ":
-                continue
-
-            if (dir_hor and i == x1) or (not dir_hor and i == y1):
-                self.grid[y][x]["char"] = char1
-                self.grid[y][x]["color"] = None
-            elif (dir_hor and i == x2) or (not dir_hor and i == y2):
-                self.grid[y][x]["char"] = char2
-                self.grid[y][x]["color"] = None
-            else:
-                self.grid[y][x]["char"] = line_char
-                self.grid[y][x]["color"] = None
-
-        if info is not None:
-            midway_x = (x1 + x2) // 2
-            midway_y = (y1 + y2) // 2
-            self._place_link_info(midway_x, midway_y, info, frame)
-        
-        return (x1, y1, x2, y2)
-    
-    def _draw_z_line(
-            self, x1: int, y1: int, x2: int, y2: int, info: str, frame: int = 0) -> None:
+        Encuentra un camino libre de obstáculos mediante DFS (Depth-First Search)
         """
-        Draws a Z-shaped line (two segments, one horizontal and one vertical, or vice-versa).
-        """
-        up_right = ["┘", "┌"]
-        down_right = ["┐", "└"]
-        
-        if y2 < y1:
-            dir_chars = up_right
-        else:
-            dir_chars = down_right
+        if visited is None:
+            visited = set()
+        if path is None:
+            path = []
+
+        if (x1, y1) == (x2, y2):
+            return path + [(x1, y1)]
+
+        # Marcamos la celda actual como visitada para no entrar en bucles infinitos
+        visited.add((x1, y1))
+        current_path = path + [(x1, y1)]
 
         abs_dx = abs(x2 - x1)
         abs_dy = abs(y2 - y1)
+        dx = 1 if x2 > x1 else (-1 if x2 < x1 else 0)
+        dy = 1 if y2 > y1 else (-1 if y2 < y1 else 0)
 
+        # Ordenamos los posibles movimientos dando prioridad a la dirección que más nos acerque al objetivo
+        moves = []
         if abs_dx >= abs_dy:
-            corner_x, corner_y = x2, y1
-  
-            self._draw_line(x1, y1, corner_x, corner_y, True, "─", dir_chars[0], info, frame)
-            self._draw_line(corner_x, corner_y, x2, y2, False, dir_chars[0], dir_chars[1])
+            if dx != 0: moves.append((x1 + dx, y1))
+            if dy != 0: moves.append((x1, y1 + dy))
+            if dy == 0: moves.extend([(x1, y1 + 1), (x1, y1 - 1)]) # Intentar rodear si estamos alineados en Y
+            if dx != 0: moves.append((x1 - dx, y1))
+            if dy != 0: moves.append((x1, y1 - dy))
         else:
-            corner_x, corner_y = x1, y2
-            self._draw_line(x1, y1, corner_x, corner_y, False, "│", dir_chars[0], info, frame)
-            self._draw_line(corner_x, corner_y, x2, y2, True, dir_chars[0], dir_chars[1])
-    
+            if dy != 0: moves.append((x1, y1 + dy))
+            if dx != 0: moves.append((x1 + dx, y1))
+            if dx == 0: moves.extend([(x1 + 1, y1), (x1 - 1, y1)]) # Intentar rodear si estamos alineados en X
+            if dy != 0: moves.append((x1, y1 - dy))
+            if dx != 0: moves.append((x1 - dx, y1))
+
+        for nx, ny in moves:
+            if (nx, ny) not in visited and (nx, ny) not in self.grid_block:
+                # Asegurarse de no salir de los límites de la terminal (opcional, pero buena práctica)
+                if 0 <= nx < self.col and 0 <= ny < self.row:
+                    is_valid = True
+                    
+                    # Evitar giros sobre líneas existentes para asegurar que solo se cruzan perpendicularmente
+                    current_char = self.grid[y1][x1]["char"]
+                    if current_char == "│" and nx == x1: # Si estamos sobre una vertical, no podemos movernos verticalmente
+                        is_valid = False
+                    elif current_char == "─" and ny == y1: # Si estamos sobre una horizontal, no podemos movernos horizontalmente
+                        is_valid = False
+                        
+                    # Comprobar la celda de destino para evitar solapamientos
+                    if is_valid and (nx, ny) != (x2, y2):
+                        target_char = self.grid[ny][nx]["char"]
+                        if nx != x1 and target_char not in [" ", "│"]:
+                            is_valid = False
+                        elif nx == x1 and target_char not in [" ", "─"]:
+                            is_valid = False
+
+                    if is_valid:
+                        result = self._find_line(nx, ny, x2, y2, visited, current_path)
+                        if result:
+                            return result # Devolvemos el primer camino válido encontrado
+
+        return [] # Retorna vacío si no hay camino posible desde este punto (provoca backtracking)
+
+    def _fill_line(self, line: List[Tuple[int, int]], info: str = None, frame: int = 0) -> None:
+        """
+        """
+        # Iteramos desde el segundo elemento hasta el penúltimo para evitar desbordamientos
+        for i in range(1, len(line) - 1):
+            px, py = line[i - 1] # Punto anterior
+            dx, dy = line[i]     # Punto actual
+            nx, ny = line[i + 1] # Punto siguiente
+
+            # Detectamos en qué direcciones están los dos puntos adyacentes
+            left = (px < dx) or (nx < dx)
+            right = (px > dx) or (nx > dx)
+            up = (py < dy) or (ny < dy)
+            down = (py > dy) or (ny > dy)
+
+            # Elegimos el carácter según la combinación de direcciones
+            if left and right:
+                char = "─"
+            elif up and down:
+                char = "│"
+            elif left and up:
+                char = "┘"
+            elif left and down:
+                char = "┐"
+            elif right and up:
+                char = "└"
+            elif right and down:
+                char = "┌"
+            else:
+                continue # Por si acaso se cruzan o hay solapamiento inesperado
+                
+            # Si la celda está vacía, dibujamos el carácter de nuestra ruta.
+            # Si ya hay un carácter (estamos cruzando otra línea), no lo sobreescribimos
+            # para crear la ilusión de que nuestra línea actual pasa "por debajo".
+            if self.grid[dy][dx]["char"] == " ":
+                self.grid[dy][dx]["char"] = char
+                self.grid[dy][dx]["color"] = self.PALETTE["line"]
+
+            if i == len(line) // 2:
+                self._place_link_info(dx, dy, info, frame)
+                
     def _place_drone(self, x: int, y: int, frame: int = 0) -> str:
         """
         """
