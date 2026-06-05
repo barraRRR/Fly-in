@@ -11,6 +11,12 @@ class Gui:
     HUB_HEIGHT = 6
     METADATA_HEIGHT = 3
     MARGIN = 2
+    PALETTE = {
+        "drone_color": "#7B39EB",
+        "warning": "#FE7733",
+        "pale_green": "#C6FF36",
+        "deep_grren": "#243837"
+    }
     
     def __init__(self, net: Network) -> None:
         self.net = net
@@ -32,6 +38,8 @@ class Gui:
         self.col, self.row = width, height
         self.grid: List[List[Dict[str, str | None]]] = [[{"char": " ", "color": None} for _ in range(self.col)] for _ in range(self.row)]
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
+
+        self.term = Terminal()
         self._map_contour()
         self._place_hubs()
         self._place_links()
@@ -108,11 +116,6 @@ class Gui:
 
             self.hub_pos_map[hub] = (grid_x, grid_y)
             
-            """
-            if len(hub.drone_bay) > 0:
-                drone_x = grid_x + (self.HUB_WIDTH // 2) - 1
-                self._place_drone(drone_x, grid_y - 1, frame)
-            """
             for i, line in enumerate(hub_lines):
                 row = grid_y + i
                 if row < self.row - 1:
@@ -130,7 +133,7 @@ class Gui:
                         col = grid_x + j
                         if col < self.col - 1:
                             self.grid[row][col]["char"] = char
-                            self.grid[row][col]["color"] = None
+                            self.grid[row][col]["color"] = self.PALETTE["drone_color"] if char == "●" else None
 
 
     def _place_links(self, frame = 0) -> None:
@@ -296,7 +299,7 @@ class Gui:
 
         for c in range(len(selected)):
             self.grid[y][x + c]["char"] = selected[c]
-            self.grid[y][x + c]["color"] = None
+            self.grid[y][x + c]["color"] = self.PALETTE["drone_color"]
 
     def _place_link_info(
             self, x: int, y: int, info: str, frame: int = 0) -> None:
@@ -320,18 +323,23 @@ class Gui:
                     break
                 off -= 1
 
-            
+    def _get_colored_char(self, c: str, color: str) -> str:
+        """
+        """
+        try:
+            if color.startswith("#"):
+                color_code = self.term.color_hex(color)
+            else:
+                color_code = getattr(self.term, color.lower(), self.term.normal)
+            return f"{color_code}{c}{self.term.normal}"
+        
+        except Exception as e:
+            return c
 
     def print_map(self) -> None:
         """
         """
-        term = Terminal()
         for row in self.grid:
             for c in row:
-                try:
-                    color_code = getattr(term, c["color"].lower(), term.normal)
-                    print(f"{color_code}{c["char"]}{term.normal}", end="")
-        
-                except Exception as e:
-                    print(c["char"], end="")
+                print(self._get_colored_char(c["char"], c["color"]), end="")
             print()

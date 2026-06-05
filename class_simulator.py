@@ -218,12 +218,13 @@ class Simulator:
     def _output_turn(self) -> str:
         """
         """
-        drone_strings = []
-        for drone in self.drones_in_motion:
-            string = (
-                f"{drone.id}-"
-                f"{drone.destination.name if drone.destination else 'on hold'}"
-            )
-            drone_strings.append(string)
+        drone_strings = [
+            f"{drone.id}-{drone.destination.name}"
+            for drone in self.drones_in_motion
+            ]
+        final_str = " ".join(drone_strings)
 
-        return " ".join(drone_strings)
+        with open("output_file.txt", "a") as out:
+            out.write(final_str + "\n")
+        
+        return final_str

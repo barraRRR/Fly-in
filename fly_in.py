@@ -13,15 +13,21 @@ def main() -> None:
     welcome()
     while True:
         while True:
-            map_file = select_map_file()
-            if map_file is None:
-                goodbye()
-            map = MapParser(map_file)
-            net = Network(**map.data)
-            sim = Simulator(net)
-            gui = Gui(net)
-            if confirm_map(gui, map_file):
-                break
+            try:
+                map_file = select_map_file()
+                if map_file is None:
+                    goodbye()
+                map = MapParser(map_file)
+                net = Network(**map.data)
+                sim = Simulator(net)
+                gui = Gui(net)
+                if confirm_map(gui, map_file):
+                    break
+            
+            except ValueError:
+                print("ERROR: Error parsing map file")
+                wait_for_enter()
+                continue
         
         manual = False
         config = configure_ux(gui)
@@ -144,9 +150,9 @@ def info_panel(
             "┌" + "─" * (size - 2) + "┐" +
             " " * margin +
             "┌" + "─" * (size - 2) + "┐\n" +
-            "|" + sub1.center(size - 2) + "|" +
+            "│" + sub1.center(size - 2) + "│" +
             " " * margin +
-            "|" + sub2.center(size - 2) + "|\n" +
+            "│" + sub2.center(size - 2) + "│\n" +
             "└" + "─" * (size - 2) + "┘" +
             " " * margin +
             "└" + "─" * (size - 2) + "┘\n"

@@ -1,8 +1,7 @@
-from pydantic import BaseModel, Field, ValidationError, model_validator, ConfigDict
-from typing import Protocol, Literal, Optional, Tuple, Any, List, Dict, ClassVar, Union
-from utils import UX, STATUS, ERROR
+from pydantic import BaseModel, Field, model_validator, ConfigDict
+from typing import Optional, Tuple, Any, List, Dict, Union
+from utils import ERROR
 from enum import Enum
-import sys
 
 
 class Zone(Enum):
@@ -230,26 +229,3 @@ class Network(BaseModel):
         
         return self
     
-    def get_map_info(self) -> str:
-        """
-        """
-        data = f"  - nb_drones: {self.nb_drones}\n"
-        data += f"  - hub list:\n"
-        for h in self.hub:
-            data += f"    · {h.name}\n"
-            data += f"        coords: {h.coords}\n"
-            if h.color:
-                data += f"        color: {h.color}\n"
-            if h.zone:
-                data += f"        zone: {h.zone.value}\n"
-            if h.max_drones:
-                data += f"        max_drones: {h.max_drones}\n"
-        data += f"  - links:\n"
-        for c in self.connections:
-            data += f"    · {c['point_a']} - {c['point_b']}"
-            data += (
-                " [max_link_capacity="
-                f"{c.get('max_link_capacity',1)}]\n"
-                )
-        
-        return data
