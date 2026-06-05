@@ -154,7 +154,7 @@ class Gui:
                 for link in hub.links:
                     if link['target_hub'] == dest:
                         max_connections = link['max']
-                        incoming = link['incoming_drones']
+                        incoming = sum([link['incoming_drones'], link['leaving_drones']])
                         info = f"{incoming}/{max_connections}"
 
                 self._draw_smart_line(hub, dest, info, frame)

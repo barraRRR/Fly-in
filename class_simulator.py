@@ -115,15 +115,15 @@ class Simulator:
         drone.remaining_turns = chosen_path.turns_to_finish
     
     @staticmethod
-    def _set_link(a: Hub, b: Hub, add: bool) -> None:
+    def _set_link(origin: Hub, dest: Hub, add: bool) -> None:
         """
         """
         mod = 1 if add == True else -1
-        for link in a.links:
-            if link['target_hub'] == b:
-                link['incoming_drones'] += mod
-        for link in b.links:
-            if link['target_hub'] == a:
+        for link in origin.links:
+            if link['target_hub'] == dest:
+                link['leaving_drones'] += mod
+        for link in dest.links:
+            if link['target_hub'] == origin:
                 link['incoming_drones'] += mod
 
     def simulate_turn(self) -> Generator[Dict[str, str], None, None]:
@@ -148,7 +148,7 @@ class Simulator:
             available_drones.append(drone)
 
         available_drones.sort(key=lambda p: p.id, reverse=True)
-        available_drones.sort(key=lambda p: p.remaining_turns)
+        available_drones.sort(key=lambda p: p.remaining_turns, reverse=True)
 
         while available_drones:
             try:

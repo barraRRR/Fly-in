@@ -83,13 +83,19 @@ class Path:
         dest = self.hubs_on_route[1]
         available_space = False
         available_links = False
-        for link in origin.links:
-            if link['target_hub'] == dest:
-                if (link['max'] > link['incoming_drones']):
+        total_incoming = 0
+        
+        for link in dest.links:
+            total_incoming += link["incoming_drones"]
+            if link['target_hub'] == origin:
+                if (link['max'] > link['incoming_drones'] + link['leaving_drones']):
                     available_links = True
-                if link['incoming_drones'] + len(dest.drone_bay) < dest.max_drones:
-                    available_space = True
-                return (available_space, available_links)
+
+        free_space = dest.max_drones - len(dest.drone_bay)
+        if free_space > total_incoming:
+            available_space = True
+        
+        return (available_space, available_links)
     
     def __eq__(self, other):
         """
@@ -209,12 +215,14 @@ class Network(BaseModel):
                 hub_a.links.append(
                     {'target_hub': hub_b,
                      'max': max_link_capacity,
-                     'incoming_drones': 0}
+                     'incoming_drones': 0,
+                     'leaving_drones': 0}
                     )
                 hub_b.links.append(
                     {'target_hub': hub_a,
                      'max': max_link_capacity,
-                     'incoming_drones': 0}
+                     'incoming_drones': 0,
+                     'leaving_drones': 0}
                     )
             
             for drone in self.start_hub.drone_bay:

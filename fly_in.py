@@ -49,9 +49,6 @@ def main() -> None:
                     elif event["type"] == "end_turn":
                         drone_status.insert(0, f"[END OF TURN {sim.turn_num:03d}]")
                         turn_list.insert(0, event["msg"])
-                        if manual:
-                            print()
-                            wait_for_enter()
                     
                     gui.update(frame)
                     pannel = text_pannel(
@@ -63,6 +60,10 @@ def main() -> None:
                     )
                     refresh(gui, sim, pannel)
                     sleep(utils.PACE)
+                    
+                    if manual and event["type"] == "end_turn" and sim.drones_left:
+                            print()
+                            wait_for_enter()
                     
 
             print(f"\n{UX['success']}\n".center(gui.col if gui.col < UX_MAX else UX_STD))

@@ -30,7 +30,7 @@ def import_texts(language: str) -> Tuple[Dict, Dict, Dict, Dict]:
 UX, STATUS, WARNING, ERROR = import_texts('en')
 UX_MAX: int = 305
 UX_STD: int = 100
-DELAY: float = 0.3
+DELAY: float = 0.5
 FAST: float = 0.0
 PACE = DELAY
 path_id_generator = count(1)
