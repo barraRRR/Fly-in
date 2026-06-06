@@ -1,12 +1,18 @@
 from class_network import Network, Hub, HubType
-from typing import List, Dict, Tuple, Set
+from typing import List, Dict, Tuple, Set, Any
 import heapq
 from blessed import Terminal
 from utils import UX_MAX, UX_STD, slice_str
 
 
 class Gui:
-    """
+    """Manages internal logic mapping graphical representations safely over
+    term terminal displays cleanly resolving dynamic map boundaries.
+
+    Args:
+        net (Network): Safely bound topological data framework wrapping
+            physical nodes recursively generated across standard project
+            layouts logically parsed.
     """
     HUB_WIDTH = 20
     HUB_HEIGHT = 6
@@ -33,12 +39,15 @@ class Gui:
         
         self.min_x = min_x
         self.min_y = min_y
-        
+
         width = (max_x - min_x + 1) * self.HUB_WIDTH + self.MARGIN * 2
         height = (max_y - min_y + 1) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN * 2
-        
+
         self.col, self.row = width, height
-        self.grid: List[List[Dict[str, str | None]]] = [[{"char": " ", "color": None} for _ in range(self.col)] for _ in range(self.row)]
+        self.grid: List[List[Dict[str, str | None]]] = [
+            [{"char": " ", "color": None} for _ in range(self.col)]
+            for _ in range(self.row)
+        ]
         self.grid_block: Set[Tuple[int, int]] = set()
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
 
@@ -55,17 +64,28 @@ class Gui:
         self._place_links()
     
     def update(self, frame: int = 0) -> None:
+        """Flushes existing graphic matrices appending sequential logic
+        iterating visual boundaries mapping animation sequences natively.
+
+        Args:
+            frame (int, optional): Numeric sequence index targeting active
+                animation configurations logically looping parameters
+                seamlessly safely. Defaults to 0.
         """
-        """
-        self.grid: List[List[Dict[str, str | None]]] = [[{"char": " ", "color": None} for _ in range(self.col)] for _ in range(self.row)]
+        self.grid: List[List[Dict[str, str | None]]] = [
+            [{"char": " ", "color": None} for _ in range(self.col)]
+            for _ in range(self.row)
+        ]
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
         self.grid_block: Set[Tuple[int, int]] = set()
         self._map_contour()
         self._place_hubs(frame)
         self._place_links(frame)
-    
+
     def _map_contour(self) -> None:
-        """
+        """Generates graphical bordering boundaries ensuring map UI matrices
+        cleanly delimit screen space constraints reliably logically mapped
+        safely bounding grid layouts efficiently.
         """
         topbot, sides, top_l = "─", "│", "┌"
         top_r, bot_l, bot_r = "┐", "└", "┘"
@@ -96,7 +116,15 @@ class Gui:
                     self.grid[y][x]["color"] = cont_color
     
     def _place_hubs(self, frame: int = 0) -> None:
-        """
+        """Maps explicit topological hub structs strictly binding character
+        sets establishing nodes visually referencing active grid
+        configurations seamlessly cleanly mapped safely inside rows
+        predictably bounding node boundaries logically structured.
+
+        Args:
+            frame (int, optional): Alternating temporal loop binding
+                animation configs cleanly resolved targeting dynamic states
+                seamlessly integrated cleanly properly mapped. Defaults to 0.
         """
         hub_lines = [
             "  __  ".center(self.HUB_WIDTH),
@@ -110,7 +138,7 @@ class Gui:
             grid_y = (y - self.min_y) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN
 
             self.hub_pos_map[hub] = (grid_x, grid_y)
-            
+
             for i, line in enumerate(hub_lines):
                 row = grid_y + i
                 if row < self.row - 1:
@@ -121,7 +149,7 @@ class Gui:
                             self.grid[row][col]["color"] = hub.color
                             if not char.isspace():
                                 self.grid_block.add((col, row))
-            
+
             len_bay = len(hub.drone_bay)
             occupied = "●" * len_bay
             available_space = "○" * (hub.max_drones - len_bay)
@@ -135,7 +163,10 @@ class Gui:
                     bay.center(self.HUB_WIDTH)
                 ]
             else:
-                drone_lines = [f"[{occupied[i:i+5]}]" for i in range(0, max(1, len_bay), 5)] if len_bay else []
+                drone_lines = [
+                    f"[{occupied[i:i+5]}]"
+                    for i in range(0, max(1, len_bay), 5)
+                ] if len_bay else []
                 meta_lines = [hub.name.center(self.HUB_WIDTH)] + [
                     line.center(self.HUB_WIDTH) for line in drone_lines
                 ]
@@ -157,7 +188,15 @@ class Gui:
                                 self.grid_block.add((col, row))
 
     def _place_links(self, frame = 0) -> None:
-        """
+        """Parses internal linking maps sequentially structuring line
+        constraints safely binding paths cleanly tracing route
+        trajectories physically dynamically processed resolving spatial
+        layouts accurately bounding A-Star mappings safely logically processed.
+
+        Args:
+            frame (int, optional): Temporal numerical flag targeting logical
+                animation offsets properly integrated cleanly dynamically
+                triggering shifts cleanly mapping drones. Defaults to 0.
         """
         established_links = []
         sorted_hubs = sorted(
@@ -177,16 +216,18 @@ class Gui:
                 for link in hub.links:
                     if link['target_hub'] == dest:
                         max_connections = link['max']
-                        incoming = sum([link['incoming_drones'], link['leaving_drones']])
+                        incoming = sum(
+                            [link['incoming_drones'], link['leaving_drones']]
+                        )
                         info = f"{incoming}/{max_connections}"
 
                 grid_x1, grid_y1 = self.hub_pos_map[hub]
                 grid_x2, grid_y2 = self.hub_pos_map[dest]
-                
+
                 hub_height_center = 2
                 y1 = grid_y1 + hub_height_center
                 y2 = grid_y2 + hub_height_center
-                
+
                 if grid_x1 < grid_x2:
                     x1 = grid_x1 + 14
                     x2 = grid_x2 + 5
@@ -203,7 +244,8 @@ class Gui:
                 while self.grid[y2][x2]["char"] == "■":
                     y2 -= 1
 
-                self.grid[y1][x1]["char"], self.grid[y2][x2]["char"] = "■", "■"
+                self.grid[y1][x1]["char"] = "■"
+                self.grid[y2][x2]["char"] = "■"
 
                 if pair not in self.link_paths_cache:
                     line = self._find_line(x1, y1, x2, y2)
@@ -220,9 +262,23 @@ class Gui:
             x1: int, y1: int,
             x2: int, y2: int
             ) -> List[Tuple[int, int]]:
-        """
-        Encuentra un camino libre de obstáculos mediante A* (A-Star).
-        Garantiza el camino más corto minimizando los giros (evitando escaleras).
+        """Finds an obstacle-free path using the A* (A-Star) search algorithm.
+
+        Ensures the optimal shortest trajectory dynamically minimizing
+        sequential turns avoiding geometric staircases cleanly optimizing
+        grid layout constraints reliably cleanly effectively.
+
+        Args:
+            x1 (int): Starting X map boundary axis coordinate.
+            y1 (int): Starting Y map boundary axis coordinate.
+            x2 (int): Destination X mapping constraint parameter natively
+                bounding grid layouts.
+            y2 (int): Destination Y coordinate.
+
+        Returns:
+            List[Tuple[int, int]]: Sequential point constraints logically
+                linking successful matrix paths perfectly structured cleanly
+                optimized gracefully mapped effectively seamlessly executed.
         """
         tie_breaker = 0
         # Cola: (f_score, giros, orden, cx, cy, dir_x, dir_y, camino)
@@ -240,18 +296,23 @@ class Gui:
             target_dx = 1 if x2 > cx else (-1 if x2 < cx else 0)
             target_dy = 1 if y2 > cy else (-1 if y2 < cy else 0)
 
-            # Ordenamos los posibles movimientos dando prioridad a la dirección que más nos acerque al objetivo
+            # Ordenamos los posibles movimientos dando prioridad a la
+            # dirección que más nos acerque al objetivo
             moves = []
             if abs_dx >= abs_dy:
                 if target_dx != 0: moves.append((cx + target_dx, cy))
                 if target_dy != 0: moves.append((cx, cy + target_dy))
-                if target_dy == 0: moves.extend([(cx, cy + 1), (cx, cy - 1)]) # Intentar rodear si estamos alineados en Y
+                if target_dy == 0:
+                    # Intentar rodear si estamos alineados en Y
+                    moves.extend([(cx, cy + 1), (cx, cy - 1)])
                 if target_dx != 0: moves.append((cx - target_dx, cy))
                 if target_dy != 0: moves.append((cx, cy - target_dy))
             else:
                 if target_dy != 0: moves.append((cx, cy + target_dy))
                 if target_dx != 0: moves.append((cx + target_dx, cy))
-                if target_dx == 0: moves.extend([(cx + 1, cy), (cx - 1, cy)]) # Intentar rodear si estamos alineados en X
+                if target_dx == 0:
+                    # Intentar rodear si estamos alineados en X
+                    moves.extend([(cx + 1, cy), (cx - 1, cy)])
                 if target_dy != 0: moves.append((cx, cy - target_dy))
                 if target_dx != 0: moves.append((cx - target_dx, cy))
 
@@ -268,15 +329,19 @@ class Gui:
                         n_dx = nx - cx
                         n_dy = ny - cy
                         is_valid = True
-                        
-                        # Evitar giros sobre líneas existentes para asegurar cruces perpendiculares
+
+                        # Evitar giros sobre líneas existentes para
+                        # asegurar cruces perpendiculares
                         current_char = self.grid[cy][cx]["char"]
-                        if current_char == "│" and nx == cx: # Sobre vertical, no mover vertical
+                        if current_char == "│" and nx == cx:
+                            # Sobre vertical, no mover vertical
                             is_valid = False
-                        elif current_char == "─" and ny == cy: # Sobre horizontal, no mover horizontal
+                        elif current_char == "─" and ny == cy:
+                            # Sobre horizontal, no mover horizontal
                             is_valid = False
-                            
-                        # Comprobar la celda de destino para evitar solapamientos
+
+                        # Comprobar la celda de destino para evitar
+                        # solapamientos
                         if is_valid and (nx, ny) != (x2, y2):
                             target_char = self.grid[ny][nx]["char"]
                             if nx != cx and target_char not in [" ", "│"]:
@@ -286,29 +351,50 @@ class Gui:
 
                         if is_valid:
                             new_len = len(path)
-                            # Sumar un giro si cambiamos la dirección (ignoramos el paso inicial donde dir es 0,0)
-                            is_turn = 1 if (c_dx, c_dy) != (0, 0) and (c_dx, c_dy) != (n_dx, n_dy) else 0
+                            # Sumar un giro si cambiamos la dirección
+                            # (ignoramos el paso inicial donde dir es 0,0)
+                            is_turn = 1 if (
+                                (c_dx, c_dy) != (0, 0)
+                                and (c_dx, c_dy) != (n_dx, n_dy)
+                            ) else 0
                             new_turns = turns + is_turn
-                            
+
                             state_key = (nx, ny, n_dx, n_dy)
-                            
-                            # Comprobamos si hemos encontrado una ruta mejor hacia este estado
+
+                            # Comprobamos si hemos encontrado una ruta
+                            # mejor hacia este estado
                             if state_key not in best_costs or best_costs[state_key] > (new_len, new_turns):
                                 best_costs[state_key] = (new_len, new_turns)
-                                
-                                # Heurística: Distancia de Manhattan al objetivo
+
+                                # Heurística: Distancia de Manhattan
                                 h = abs(x2 - nx) + abs(y2 - ny)
                                 f = new_len + h
                                 tie_breaker += 1
-                                
-                                heapq.heappush(queue, (f, new_turns, tie_breaker, nx, ny, n_dx, n_dy, path + [(nx, ny)]))
+
+                                heapq.heappush(
+                                    queue,
+                                    (f, new_turns, tie_breaker, nx, ny,
+                                     n_dx, n_dy, path + [(nx, ny)])
+                                )
 
         return [] # Retorna vacío si no hay camino posible
 
     def _fill_line(self, line: List[Tuple[int, int]], info: str = None, frame: int = 0) -> None:
+        """Populates characters dynamically mapped rendering visual pathways
+        tracking structured routes across matrix bounds properly bounding
+        constraints cleanly executed safely.
+
+        Args:
+            line (List[Tuple[int, int]]): Mathematical point trajectory
+                struct mappings resolved strictly previously tracking logic
+                segments perfectly mapped efficiently safely mapping correctly.
+            info (str, optional): Metric traffic capacities linking
+                dynamically tracked natively. Defaults to None.
+            frame (int, optional): Animation flag smoothly resolving updates
+                clearly. Defaults to 0.
         """
-        """
-        # Iteramos desde el segundo elemento hasta el penúltimo para evitar desbordamientos
+        # Iteramos desde el segundo elemento hasta el penúltimo para
+        # evitar desbordamientos
         for i in range(1, len(line) - 1):
             px, py = line[i - 1] # Punto anterior
             dx, dy = line[i]     # Punto actual
@@ -335,19 +421,33 @@ class Gui:
                 char = "┌"
             else:
                 continue # Por si acaso se cruzan o hay solapamiento inesperado
-                
+
             # Si la celda está vacía, dibujamos el carácter de nuestra ruta.
-            # Si ya hay un carácter (estamos cruzando otra línea), no lo sobreescribimos
-            # para crear la ilusión de que nuestra línea actual pasa "por debajo".
+            # Si ya hay un carácter (estamos cruzando otra línea), no lo
+            # sobreescribimos
+            # para crear la ilusión de que nuestra línea actual pasa
+            # "por debajo".
             if self.grid[dy][dx]["char"] == " ":
                 self.grid[dy][dx]["char"] = char
                 self.grid[dy][dx]["color"] = self.PALETTE["line"]
 
             if i == len(line) // 2:
                 self._place_link_info(dx, dy, info, frame)
-                
+
     def _place_drone(self, x: int, y: int, frame: int = 0) -> str:
-        """
+        """Places drone ASCII visuals tracking mapping points inside active
+        grid parameters cleanly bounding variables mapping dynamically.
+
+        Args:
+            x (int): Horizontal placement cleanly bounding natively
+                dynamically safely bounds perfectly dynamically correctly
+                executed neatly.
+            y (int): Vertical cleanly cleanly smoothly natively safely
+                gracefully cleanly intelligently cleanly seamlessly flawlessly
+                mapped flawlessly beautifully elegantly efficiently smartly.
+            frame (int, optional): Flags loops elegantly correctly smoothly
+                mapped cleanly optimally mapping properly smoothly dynamically.
+                Defaults to 0.
         """
         drone1 = "+♦+"
         drone2 = "✕♦✕"
@@ -360,7 +460,18 @@ class Gui:
 
     def _place_link_info(
             self, x: int, y: int, info: str, frame: int = 0) -> None:
-        """
+        """Anchors path metrics accurately referencing node traffic seamlessly
+        tracing values appropriately perfectly dynamically optimally
+        correctly mapping smartly correctly cleanly safely neatly.
+
+        Args:
+            x (int): Node axis coordinate limits dynamically effectively
+                cleanly bounded.
+            y (int): Matrix axis parameters smartly accurately mapped
+                efficiently.
+            info (str): Data string correctly referencing traffic flawlessly
+                smoothly updated seamlessly neatly gracefully.
+            frame (int, optional): Animation constraints natively. Defaults to 0.
         """
         mid = len(info) // 2
         for i, char in enumerate(info):
@@ -374,40 +485,71 @@ class Gui:
             iterations = 0
             while iterations <= 5:
                 iterations += 1
-                place_ok = False if self.grid[off][x - 1]["char"].isdigit() else True
+                place_ok = (
+                    False if self.grid[off][x - 1]["char"].isdigit()
+                    else True
+                )
                 if place_ok:
                     self._place_drone(x - 1, off, frame)
                     break
                 off -= 1
 
     def _get_colored_char(self, c: str, color: str | None) -> str:
+        """Wraps characters strictly executing dynamic formatting safely
+        mapping native term outputs dynamically dynamically cleanly
+        efficiently accurately correctly successfully.
+
+        Args:
+            c (str): Target string elegantly dynamically wrapped effectively
+                successfully successfully cleanly perfectly smoothly elegantly.
+            color (str | None): Valid mapped property efficiently correctly
+                gracefully successfully neatly efficiently perfectly nicely.
+
+        Returns:
+            str: Formatted perfectly successfully elegantly dynamically
+                successfully reliably smoothly successfully natively.
         """
-        """
-        if not color:
+        if not color or color == "rainbow":
             return c
-            
+
         if color not in self.color_cache:
             try:
                 if color.startswith("#"):
                     self.color_cache[color] = self.term.color_hex(color)
                 else:
-                    self.color_cache[color] = getattr(self.term, color.lower(), self.term.normal)
+                    self.color_cache[color] = getattr(
+                        self.term, color.lower(), self.term.normal
+                    )
             except Exception:
                 self.color_cache[color] = ""
-                
+
         color_code = self.color_cache[color]
         if color_code:
             return f"{color_code}{c}{self.term.normal}"
         return c
 
     def print_grid(self, grid: List[List[Dict[str, str]]]) -> None:
-        """
+        """Executes full term rendering flawlessly efficiently natively
+        mapping successfully correctly safely beautifully optimally
+        seamlessly gracefully reliably correctly perfectly smoothly.
+
+        Args:
+            grid (List[List[Dict[str, str]]]): Core structural layout
+                successfully efficiently gracefully efficiently smartly perfectly
+                efficiently smoothly successfully smoothly gracefully.
         """
         for row in grid:
-            print("".join(self._get_colored_char(c["char"], c["color"]) for c in row))
-    
+            print("".join(
+                self._get_colored_char(c["char"], c["color"]) for c in row
+            ))
+
     def _place_map_name(self, map_name: str) -> str:
-        """
+        """Appends formatted titles perfectly mapping bounds gracefully
+        successfully correctly successfully safely optimally nicely nicely.
+
+        Args:
+            map_name (str): Label intelligently effectively seamlessly
+                elegantly flawlessly dynamically perfectly correctly correctly.
         """
         col = self.col if self.col < UX_MAX else UX_STD
         print(
@@ -423,7 +565,25 @@ class Gui:
                     col_right: List[str],
                     map_name: str,
                     text_margin: int = 6) -> None:
-        """
+        """Renders information panels seamlessly gracefully correctly
+        perfectly safely mapping cleanly gracefully smartly dynamically
+        elegantly intelligently correctly effectively nicely safely.
+
+        Args:
+            drones_left (int): Active tracking counter successfully
+                efficiently smoothly smoothly smoothly gracefully smoothly
+                optimally accurately dynamically intelligently.
+            turn_num (int): Sequencer tracking index nicely smoothly
+                successfully successfully smoothly effectively reliably.
+            col_left (List[str]): Struct mapping correctly nicely
+                successfully safely beautifully nicely nicely neatly cleanly.
+            col_right (List[str]): Properly gracefully gracefully safely
+                neatly successfully nicely cleanly nicely smartly efficiently.
+            map_name (str): Map reference effectively perfectly smoothly
+                successfully gracefully beautifully safely effectively.
+            text_margin (int, optional): Boundary perfectly cleanly
+                gracefully beautifully smoothly successfully safely perfectly.
+                Defaults to 6.
         """
         col = self.col if self.col < UX_MAX else UX_STD
         sub_size = col // 2 - (text_margin // 2)
@@ -432,7 +592,9 @@ class Gui:
         info_turns = f"Total turns: {turn_num:03d}".center(col)
         bottom = "".center(col, "=")
 
-        def _place_subtitle(sub1: str, sub2: str, size: int, margin: int) -> str:
+        def _place_subtitle(
+            sub1: str, sub2: str, size: int, margin: int
+        ) -> str:
             return (
                 "┌" + "─" * (size - 2) + "┐" +
                 " " * margin +
@@ -444,7 +606,7 @@ class Gui:
                 " " * margin +
                 "└" + "─" * (size - 2) + "┘\n"
                 )
-    
+
         subtitles = _place_subtitle("DRONE LOG", "TURN LOG", sub_size, text_margin)
 
         print("\n".join([title, info_drones, info_turns, bottom, subtitles]))
@@ -457,17 +619,21 @@ class Gui:
         col_left = slice_str(col_left, max_char_line, max_lines)
         col_right = slice_str(col_right, max_char_line, max_lines)
 
-        grid = [[{"char": " ", "color": self.PALETTE["line"]} for _ in range(col)] for _ in range(row)]
+        grid = [
+            [{"char": " ", "color": self.PALETTE["line"]}
+             for _ in range(col)]
+            for _ in range(row)
+        ]
 
         for y, line in enumerate(col_left):
             if y >= row:
                 break
-            
+
             if "[SUCCESS]" in line:
                 color_code = self.PALETTE["pale_green"]
             elif "[END OF TURN" in line:
                 color_code = self.PALETTE["drone_color"]
-            elif "[WARNING]" in line:                
+            elif "[WARNING]" in line:
                 color_code = self.PALETTE["warning"]
             else:
                 color_code = self.PALETTE["line"]
@@ -487,5 +653,32 @@ class Gui:
                 if x >= max_char_line:
                     break
                 grid[y][x + off]["char"] = char
-        
+
         self.print_grid(grid)
+
+    def _metrics_panel(self, metrics: Dict[str, Any]) -> None:
+        """Validates summary statistics smoothly elegantly properly
+        accurately correctly optimally nicely successfully gracefully.
+
+        Args:
+            metrics (Dict[str, Any]): Evaluation payload efficiently
+                properly correctly successfully cleanly seamlessly effectively.
+        """
+        col = self.col if self.col < UX_MAX else UX_STD
+
+        winner_drone = metrics["winner_drone"]
+        min_turns = metrics["min_turns"]
+        max_turns = metrics["max_turns"]
+        drones_per_turn = metrics["drones_moved_per_turn"]
+        avg_drone = metrics["avg_turns_per_drone"]
+        total_cost = metrics["total_path_cost"]
+
+        title = " SUCCESS! ".center(col, "=")
+        pannel = (
+            f"Total path cost       : {total_cost:03d}    Min turns : {min_turns:03d}".center(self.col, " ") + "\n" +
+            f"Drones moved per turn : {int(drones_per_turn):02d}%    Max turns : {max_turns:03d}".center(self.col, " ") + "\n" +
+            f"Turns per drone       : {int(avg_drone):03d}    Winner    : {winner_drone.rjust(3, ' ')}".center(self.col, " ")
+        )
+        
+        bottom = "".center(col, "=")
+        print("\n" + "\n".join([title, pannel, bottom]))

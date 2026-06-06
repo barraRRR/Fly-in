@@ -3,14 +3,29 @@ from typing import Dict, List
 
 
 class MapParser:
-    """
+    """Encapsulates plain-text document logic reading variables safely
+    establishing dict mappings targeting pydantic instantiation
+    dynamically.
+
+    Args:
+        path (str): Pointer strictly referring existing project relative
+            folder path containing the map.
     """
     def __init__(self, path: str) -> None:
         self.path = path
         self.data = self._parse_map()
 
     def _parse_map(self) -> Dict:
-        """
+        """Executes line-by-line file logic parsing boundaries mapping
+        string types iteratively onto expected application dictionaries.
+
+        Returns:
+            Dict: Nested data struct fully populated against required
+                definitions dictating network topology logically mapped.
+
+        Raises:
+            ValueError: Identifies any structural parsing fault, metadata
+                absence or duplication logically violating schema guidelines.
         """
         first_line_nb_drones = False
         payload: Dict = {
@@ -26,7 +41,7 @@ class MapParser:
             print(STATUS['parsing_map'].format(map=self.path), end='')
             raw = f.readlines()
         print(' OK')
-        
+
         for line in raw:
             clean_line = line.strip()
             if not clean_line or clean_line.startswith('#'):
@@ -38,7 +53,7 @@ class MapParser:
 
             if not first_line_nb_drones and key != 'nb_drones':
                 raise ValueError(ERROR['parser']['nb_drones_first_item'])
-                
+
             elif first_line_nb_drones and key == 'nb_drones':
                 raise ValueError(ERROR['parser']['nb_drones_repeated'])
             
@@ -64,12 +79,21 @@ class MapParser:
 
             else:
                 raise ValueError
-        
+
         return payload
-    
+
     @staticmethod
     def _parse_hub(line: str) -> Dict:
-        """
+        """Extracts node configuration data dynamically bounded through
+        brackets decoding hub mapping traits uniquely parsed.
+
+        Args:
+            line (str): Raw unsanitized text row read matching hub
+                formatting prefixes strictly defined.
+
+        Returns:
+            Dict: Struct mapping title, geometries, bounding limits, and
+                categorical configurations dynamically fetched.
         """
         line = line.lower().strip()
         hub_type, data = line.split(':', 1)
@@ -100,16 +124,27 @@ class MapParser:
                     else:
                         payload[meta] = value
                 else:
-                    raise ValueError(ERROR['parser']['metadata'].format(meta=meta))
-        
+                    raise ValueError(
+                        ERROR['parser']['metadata'].format(meta=meta)
+                    )
+
         except IndexError:
             pass
-        
+
         return payload
 
     @staticmethod
     def _parse_connection(line: str) -> Dict:
-        """
+        """Determines string logic mappings binding linking segments
+        tracking point targets alongside required limitations bound physically.
+
+        Args:
+            line (str): Text row referencing direct connection flags
+                strictly resolving point mapping boundaries.
+
+        Returns:
+            Dict: Sub-dictionary structuring A and B target nodes paired
+                along with connection cap metadata values.
         """
         line = line.lower().strip()
         data = line.split(':', 1)[1]
@@ -126,10 +161,10 @@ class MapParser:
         try:
             if '=' not in data[1]:
                 raise ValueError('Invalid capacity format')
-            
+
             max_link_capacity = int(data[1].strip('[]').split('=')[1])
             payload['max_link_capacity'] = max_link_capacity
-        
+
         except IndexError:
             pass
 

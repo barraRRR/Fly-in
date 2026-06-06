@@ -5,13 +5,24 @@
         "permission_denied": "❌ Permission denied",
         "no_files_found": "❌ No folders or .txt files found",
         "exit_option": "❌ Exit",
+        "exit_simple": "Exit program",
         "press_enter": "Press ENTER to continue...",
         "goodbye": "Thanks for evaluating Fly-in!",
         "success": "SUCCESS!",
         "size_warning": "WARNING: map size exceed 305 columns limit. It won't be displayed during simulation.",
         "interrupt_hint": "Press [ctr + C] to end simulation",
         "hub_data_found": "Looking for maps at {path}",
-        "hub_data_saved": "Hub data saved in hub_data.json!"
+        "hub_data_saved": "Hub data saved in hub_data.json!",
+        "new_simulation": "Start new simulation",
+        "confirm_map": "MAP CONFIRMATION",
+        "map_name": "Selected map: {map_name}",
+        "continue_sim": "Continue",
+        "select_diff_map": "Select a different map",
+        "configure_sim": "CONFIGURE SIMULATION",
+        "mode_manual": "Manual (step-by-step)",
+        "mode_auto": "Automatic (normal speed)",
+        "mode_fast": "Fast and furious",
+        "mode_direct": "Direct to the point (no delay)"
     },
     "status": {
         "loading_map": "Loading map...",
@@ -21,9 +32,11 @@
         "drone_flying_restricted": "{drone_id} [FLYING] : Completing restricted flight to {destination}. Available again in next turn.",
         "drone_evaluating": "{drone_id} [STATUS] : Evaluating path status...",
         "drone_flying": "{drone_id} [FLYING] : Flying to {destination}...",
+        "drone_arrived": "{drone_id} [ARRIVED] : Successfully reached {hub_name}",
         "drone_delivered": "{drone_id} [SUCCESS]: Drone successfully delivered!",
         "infinite_loop_error": "ERROR: Infinite loop detected in available_drones. Remaining drones: {count}",
-        "loading_texts": "Loading texts..."
+        "loading_texts": "Loading texts...",
+        "end_of_turn": "[TURN {turn_num:03d} COMPLETED]"
     },
     "warning": {
         "simulator": {
@@ -45,7 +58,8 @@
             "self_link": "Invalid connection: {point_a} and {point_b} are the same hub.",
             "missing_hub": "Invalid connection: hub '{point}' not found.",
             "missing_start_hub": "There must be exactly one start hub.",
-            "missing_end_hub": "There must be exactly one end hub."
+            "missing_end_hub": "There must be exactly one end hub.",
+            "parsing_error": "ERROR: Failed to parse the map file. Please check its format."
         },
         "critical": {
             "no_available_paths": "Critical error: no available paths for drone '{drone_id}'.",
