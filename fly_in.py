@@ -1,4 +1,4 @@
-from class_network import Network, Drone, Hub
+from class_network import Network
 from class_parser import MapParser
 from class_simulator import Simulator
 from class_gui import Gui
@@ -17,11 +17,12 @@ def main() -> None:
                 map_file = select_map_file()
                 if map_file is None:
                     goodbye()
+                map_name = map_file.split("/")[-1].removesuffix(".txt")
                 map = MapParser(map_file)
                 net = Network(**map.data)
                 sim = Simulator(net)
                 gui = Gui(net)
-                if confirm_map(gui, map_file):
+                if confirm_map(gui, map_name):
                     break
             
             except ValueError:
@@ -43,11 +44,34 @@ def main() -> None:
 
         turn_list: List[str] = []
         drone_status: List[str] = []
-        pannel: str = ""
+        col_left = []
+        col_right = []
         frame = 0
+
+        def refresh(
+                gui: Gui,
+                sim: Simulator,
+                col_left: List[str],
+                col_right: List[str],
+                map_name: str) -> None:
+            """
+            """
+            clear()
+            gui._place_map_name(map_name)
+            if gui.col < UX_MAX:
+                gui.print_grid(gui.grid)
+
+            gui._text_pannel(
+                sim.drones_left,
+                sim.turn_num,
+                col_left,
+                col_right,
+                map_name)
+
         try:
-            while sim.drones_left:
-                refresh(gui, sim, pannel)
+            while sim.drones_left:                
+                refresh(gui, sim, col_left, col_right, map_name)
+
                 for event in sim.simulate_turn():
                     frame += 1
                     if event["type"] == "drone_status":
@@ -57,20 +81,15 @@ def main() -> None:
                         turn_list.insert(0, event["msg"])
                     
                     gui.update(frame)
-                    pannel = text_pannel(
-                        net=net,
-                        sim=sim,
-                        gui=gui,
-                        col_left=drone_status,
-                        col_right=turn_list
-                    )
-                    refresh(gui, sim, pannel)
+                    col_left = drone_status
+                    col_right = turn_list
+                    
+                    refresh(gui, sim, col_left, col_right, map_name)
                     sleep(utils.PACE)
                     
                     if manual and event["type"] == "end_turn" and sim.drones_left:
                             print()
                             wait_for_enter()
-                    
 
             print(f"\n{UX['success']}\n".center(gui.col if gui.col < UX_MAX else UX_STD))
         except KeyboardInterrupt:
@@ -84,18 +103,17 @@ def main() -> None:
             goodbye()
 
 
-def confirm_map(gui: Gui, map_file: str) -> bool:
+def confirm_map(gui: Gui, map_name: str) -> bool:
     """
     """
     clear()
     col = gui.col if gui.col < UX_MAX else UX_STD
-    map_name = map_file.split("/")[-1].removesuffix(".txt")
     print("\n" + "═" * col)
     print("CONFIRM MAP".center(col))
     print("═" * col, end="\n\n")
     print("Map name: " + map_name, end="\n\n")
     if gui.col < UX_MAX:
-        gui.print_map()
+        gui.print_grid(gui.grid)
     else:
         print(UX["size_warning"])
     print()
@@ -120,87 +138,5 @@ def configure_ux(gui: Gui) -> int:
     return idx
 
 
-
-def refresh(gui: Gui, sim: Simulator, pannel: str) -> None:
-    """
-    """
-    clear()
-    if gui.col < UX_MAX:
-        gui.print_map()
-    print(info_panel(gui, sim))
-    print(pannel)
-    # print(f"\n{UX['interrupt_hint']}")
-
-
-def info_panel(
-        gui: Gui,
-        sim: Simulator,
-        margin: int = 6) -> str:
-    """
-    """
-    col = gui.col if gui.col < UX_MAX else UX_STD
-    sub_size = col // 2 - (margin // 2)
-    title = " STATUS ".center(col, "=")
-    info_drones = f"Drones left: {len(sim.drones_left)}".center(col)
-    info_turns = f"Total turns: {sim.turn_num}".center(col)
-    bottom = "".center(col, "=")
-
-    def place_subtitle(sub1: str, sub2: str, size: int, margin: int) -> str:
-        return (
-            "┌" + "─" * (size - 2) + "┐" +
-            " " * margin +
-            "┌" + "─" * (size - 2) + "┐\n" +
-            "│" + sub1.center(size - 2) + "│" +
-            " " * margin +
-            "│" + sub2.center(size - 2) + "│\n" +
-            "└" + "─" * (size - 2) + "┘" +
-            " " * margin +
-            "└" + "─" * (size - 2) + "┘\n"
-            )
-    subtitles = place_subtitle("DRONE LOG", "TURN LOG", sub_size, margin)
-
-    return "\n".join([title, info_drones, info_turns, bottom, subtitles])
-
-        
-def text_pannel(net: Network,
-                sim: Simulator,
-                gui: Gui,
-                col_left: List[str],
-                col_right: List[str],
-                margin: int = 6) -> str:
-    """
-    """
-    col = gui.col if gui.col < UX_MAX else UX_STD
-    max_lines = 10
-    row = max_lines
-    max_char_line = col // 2 - (margin // 2)
-    
-    col_left = slice_str(col_left, max_char_line, max_lines)
-    col_right = slice_str(col_right, max_char_line, max_lines)
-
-    grid = [[" " for _ in range(col)] for _ in range(row)]
-
-    for y, line in enumerate(col_left):
-        if y >= row:
-            break
-        for x, char in enumerate(line):
-            if x >= max_char_line:
-                break
-            grid[y][x] = char
-
-    off = max_char_line + margin
-
-    for y, line in enumerate(col_right):
-        if y >= row:
-            break
-        for x, char in enumerate(line):
-            if x >= max_char_line:
-                break
-            grid[y][x + off] = char
-    
-    return "\n".join(["".join(row) for row in grid])
-
-
 if __name__ == "__main__":
     main()
-

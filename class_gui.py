@@ -2,6 +2,7 @@ from class_network import Network, Hub, HubType
 from typing import List, Dict, Tuple, Set
 import heapq
 from blessed import Terminal
+from utils import UX_MAX, UX_STD, slice_str
 
 
 class Gui:
@@ -41,13 +42,14 @@ class Gui:
         self.grid_block: Set[Tuple[int, int]] = set()
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
 
-        self.corners = ["─", "┌", "┐", "└", "┘"]
+        self.corners = ["┌", "┐", "└", "┘"]
         self.hor_line = "─"
         self.ver_line = "│"
         self.point = "■"
-        self.cross = "┼"
 
         self.term = Terminal()
+        self.link_paths_cache: Dict[Tuple[str, str], List[Tuple[int, int]]] = {}
+        self.color_cache: Dict[str, str] = {}
         self._map_contour()
         self._place_hubs()
         self._place_links()
@@ -120,25 +122,37 @@ class Gui:
                             if not char.isspace():
                                 self.grid_block.add((col, row))
             
-            occupied = "●" * len(hub.drone_bay)
-            available_space = "○" * (hub.max_drones - len(hub.drone_bay))
+            len_bay = len(hub.drone_bay)
+            occupied = "●" * len_bay
+            available_space = "○" * (hub.max_drones - len_bay)
             bay = f"[{occupied}{available_space}]"
             zone = f"[{hub.zone.name.upper()}]"
 
-            meta_lines = [
-                hub.name.center(self.HUB_WIDTH),
-                zone.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else "",
-                bay.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else ""
-            ]
+            if hub.hub_type == HubType.HUB:
+                meta_lines = [
+                    hub.name.center(self.HUB_WIDTH),
+                    zone.center(self.HUB_WIDTH),
+                    bay.center(self.HUB_WIDTH)
+                ]
+            else:
+                drone_lines = [f"[{occupied[i:i+5]}]" for i in range(0, max(1, len_bay), 5)] if len_bay else []
+                meta_lines = [hub.name.center(self.HUB_WIDTH)] + [
+                    line.center(self.HUB_WIDTH) for line in drone_lines
+                ]
 
             for i, line in enumerate(meta_lines):
                 row = grid_y + 3 + i
+                if "○" in line or "●" in line:
+                    color_code = self.PALETTE["drone_color"]
+                else:
+                    color_code = None
+
                 if row < self.row - 1:
                     for j, char in enumerate(line):
                         col = grid_x + j
                         if col < self.col - 1:
                             self.grid[row][col]["char"] = char
-                            self.grid[row][col]["color"] = self.PALETTE["drone_color"] if char == "●" else None
+                            self.grid[row][col]["color"] = color_code
                             if not char.isspace():
                                 self.grid_block.add((col, row))
 
@@ -191,7 +205,12 @@ class Gui:
 
                 self.grid[y1][x1]["char"], self.grid[y2][x2]["char"] = "■", "■"
 
-                line = self._find_line(x1, y1, x2, y2)
+                if pair not in self.link_paths_cache:
+                    line = self._find_line(x1, y1, x2, y2)
+                    self.link_paths_cache[pair] = line
+                else:
+                    line = self.link_paths_cache[pair]
+                    
                 self._fill_line(line, info, frame)
                 self.grid_block.add((x1, y1))
                 self.grid_block.add((x2, y2))
@@ -361,23 +380,112 @@ class Gui:
                     break
                 off -= 1
 
-    def _get_colored_char(self, c: str, color: str) -> str:
+    def _get_colored_char(self, c: str, color: str | None) -> str:
         """
         """
-        try:
-            if color.startswith("#"):
-                color_code = self.term.color_hex(color)
-            else:
-                color_code = getattr(self.term, color.lower(), self.term.normal)
-            return f"{color_code}{c}{self.term.normal}"
-        
-        except Exception as e:
+        if not color:
             return c
+            
+        if color not in self.color_cache:
+            try:
+                if color.startswith("#"):
+                    self.color_cache[color] = self.term.color_hex(color)
+                else:
+                    self.color_cache[color] = getattr(self.term, color.lower(), self.term.normal)
+            except Exception:
+                self.color_cache[color] = ""
+                
+        color_code = self.color_cache[color]
+        if color_code:
+            return f"{color_code}{c}{self.term.normal}"
+        return c
 
-    def print_map(self) -> None:
+    def print_grid(self, grid: List[List[Dict[str, str]]]) -> None:
         """
         """
-        for row in self.grid:
-            for c in row:
-                print(self._get_colored_char(c["char"], c["color"]), end="")
-            print()
+        for row in grid:
+            print("".join(self._get_colored_char(c["char"], c["color"]) for c in row))
+    
+    def _place_map_name(self, map_name: str) -> str:
+        """
+        """
+        col = self.col if self.col < UX_MAX else UX_STD
+        print(
+            "┌" + "─" * (col - 2) + "┐\n" +
+            "│" + map_name.upper().center(col - 2) + "│\n"
+            "└" + "─" * (col - 2) + "┘"
+            )
+
+    def _text_pannel(self,
+                    drones_left: int,
+                    turn_num: int,
+                    col_left: List[str],
+                    col_right: List[str],
+                    map_name: str,
+                    text_margin: int = 6) -> None:
+        """
+        """
+        col = self.col if self.col < UX_MAX else UX_STD
+        sub_size = col // 2 - (text_margin // 2)
+        title = " STATUS ".center(col, "=")
+        info_drones = f"Drones left: {len(drones_left):03d}".center(col)
+        info_turns = f"Total turns: {turn_num:03d}".center(col)
+        bottom = "".center(col, "=")
+
+        def _place_subtitle(sub1: str, sub2: str, size: int, margin: int) -> str:
+            return (
+                "┌" + "─" * (size - 2) + "┐" +
+                " " * margin +
+                "┌" + "─" * (size - 2) + "┐\n" +
+                "│" + sub1.center(size - 2) + "│" +
+                " " * margin +
+                "│" + sub2.center(size - 2) + "│\n" +
+                "└" + "─" * (size - 2) + "┘" +
+                " " * margin +
+                "└" + "─" * (size - 2) + "┘\n"
+                )
+    
+        subtitles = _place_subtitle("DRONE LOG", "TURN LOG", sub_size, text_margin)
+
+        print("\n".join([title, info_drones, info_turns, bottom, subtitles]))
+
+
+        max_lines = 10
+        row = max_lines
+        max_char_line = col // 2 - (text_margin // 2)
+        
+        col_left = slice_str(col_left, max_char_line, max_lines)
+        col_right = slice_str(col_right, max_char_line, max_lines)
+
+        grid = [[{"char": " ", "color": self.PALETTE["line"]} for _ in range(col)] for _ in range(row)]
+
+        for y, line in enumerate(col_left):
+            if y >= row:
+                break
+            
+            if "[SUCCESS]" in line:
+                color_code = self.PALETTE["pale_green"]
+            elif "[END OF TURN" in line:
+                color_code = self.PALETTE["drone_color"]
+            elif "[WARNING]" in line:                
+                color_code = self.PALETTE["warning"]
+            else:
+                color_code = self.PALETTE["line"]
+
+            for x, char in enumerate(line):
+                if x >= max_char_line:
+                    break
+                grid[y][x]["char"] = char
+                grid[y][x]["color"] = color_code
+
+        off = max_char_line + text_margin
+
+        for y, line in enumerate(col_right):
+            if y >= row:
+                break
+            for x, char in enumerate(line):
+                if x >= max_char_line:
+                    break
+                grid[y][x + off]["char"] = char
+        
+        self.print_grid(grid)

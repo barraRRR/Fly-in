@@ -168,3 +168,78 @@ D10-conv_restricted7 D12-overflow_hell4 D1-false_hope3 D11-conv_restricted1 D13-
 D11-conv_restricted1 D13-overflow_hell1 D10-conv_restricted8 D1-false_hope2 D12-conv_restricted7 D14-overflow_hell4 D15-micro_gate1 D16-maze_trap_a2 D17-maze_trap_a1 D18-gate_hell1
 D10-conv_restricted8 D12-conv_restricted7 D14-overflow_hell4 D11-false_hope3 D13-conv_restricted1 D1-priority_trap2 D15-overflow_hell1 D16-micro_gate1 D17-maze_trap_a2 D18-maze_trap_a1 D19-gate_hell1
 D13-conv_restricted1 D15-overflow_hell1 D10-conv_restricted9 D12-conv_restricted8 D11-false_hope2 D1-priority_trap1 D14-conv_restricted7 D16-overflow_hell4 D17-micro_gate1 D18-maze_trap_a2 D19-maze_trap_a1 D2-gate_hell1
+D1-waypoint1
+D1-waypoint2 D2-waypoint1
+D1-goal D2-waypoint2
+D2-goal
+D1-waypoint1
+D1-waypoint2 D2-waypoint1
+D1-goal D2-waypoint2
+D2-goal
+D1-fast_junction D2-slow_path1
+D2-slow_path1 D1-fast_path D3-fast_junction
+D1-merge_point D3-fast_path D2-slow_path2 D4-fast_junction D5-slow_path1
+D5-slow_path1 D1-goal D2-merge_point D3-merge_point D4-fast_path
+D2-goal D3-goal D4-merge_point D5-slow_path2
+D4-goal D5-merge_point
+D5-goal
+D1-gate3 D10-gate2 D11-gate1
+D1-gate3 D10-gate2 D11-gate1
+D1-waypoint1
+D1-waypoint2 D2-waypoint1
+D1-goal D2-waypoint2
+D2-goal
+D1-gate3 D10-gate2 D11-gate1
+D1-waiting_area3 D10-gate3 D12-gate2 D11-waiting_area1
+D1-convergence D10-waiting_area3 D11-priority_bypass1 D12-gate3 D2-gate2 D3-gate1
+D1-final_bottleneck D10-convergence D11-priority_bypass2 D12-waiting_area3 D2-gate3 D4-gate2 D3-waiting_area1
+D1-goal D10-final_bottleneck D11-convergence D12-convergence D2-waiting_area3 D3-priority_bypass1 D4-gate3 D5-gate2 D6-gate1
+D1-dist_gate1 D10-dist_gate3
+D1-maze_correct D11-dist_gate1 D10-maze_loop1
+D1-bottleneck1 D11-maze_correct D10-maze_loop2 D12-dist_gate1 D13-dist_gate3
+D1-bottleneck2 D11-bottleneck1 D10-maze_correct D12-maze_correct D14-dist_gate1 D13-maze_loop1
+D1-priority_hub D11-bottleneck2 D10-bottleneck1 D12-bottleneck1 D14-maze_correct D13-maze_loop2 D15-dist_gate1 D2-dist_gate3
+D1-conv_priority1 D11-priority_hub D10-bottleneck2 D12-overflow1 D14-bottleneck1 D13-maze_correct D15-maze_correct D3-dist_gate1 D2-maze_loop1
+D12-overflow1 D1-conv_priority2 D11-conv_priority1 D10-priority_hub D14-bottleneck2 D13-bottleneck1 D15-bottleneck1 D3-maze_correct D2-maze_loop2 D4-dist_gate1 D5-dist_gate3
+D1-final_merge D11-conv_priority2 D10-conv_priority1 D14-priority_hub D13-bottleneck2 D15-overflow1 D12-overflow2 D3-bottleneck1 D2-maze_correct D4-maze_correct D6-dist_gate1 D5-maze_loop1
+D15-overflow1 D12-overflow2 D1-final_gate1 D11-final_merge D10-conv_priority2 D14-conv_priority1 D13-priority_hub D3-bottleneck2 D2-bottleneck1 D4-bottleneck1 D6-maze_correct D5-maze_loop2 D7-dist_gate1 D8-dist_gate3
+D1-final_gate2 D11-final_gate1 D10-final_merge D14-conv_priority2 D13-conv_priority1 D12-conv_normal1 D3-priority_hub D2-bottleneck2 D4-overflow1 D15-overflow2 D6-bottleneck1 D5-maze_correct D7-maze_correct D9-dist_gate1 D8-maze_loop1
+D1-junction D2-junction
+D1-correct_path D3-junction
+D1-intermediate D2-correct_path D4-junction
+D1-goal D2-intermediate D3-correct_path D5-junction
+D2-goal D3-intermediate D4-correct_path
+D3-goal D4-intermediate D5-correct_path
+D4-goal D5-intermediate
+D5-goal
+D1-gate3 D10-gate2 D11-gate1
+D1-waiting_area3 D10-waiting_area2 D12-gate3 D2-gate2 D11-waiting_area1
+D1-convergence D10-priority_bypass2 D12-waiting_area3 D11-priority_bypass1 D2-waiting_area2 D3-gate3 D4-gate2 D5-gate1
+D1-final_bottleneck D10-convergence D12-convergence D11-priority_bypass2 D2-priority_bypass2 D3-waiting_area3 D4-waiting_area2 D6-gate3 D7-gate2 D5-waiting_area1
+D1-goal D10-final_bottleneck D12-final_bottleneck D11-convergence D2-convergence D3-convergence D4-priority_bypass2 D6-waiting_area3 D5-priority_bypass1 D7-waiting_area2 D8-gate3 D9-gate2
+D1-gate3 D10-gate2 D11-gate1
+D1-waiting_area3 D10-waiting_area2 D12-gate3 D2-gate2 D11-waiting_area1
+D1-convergence D10-priority_bypass2 D12-waiting_area3 D11-priority_bypass1 D2-waiting_area2 D3-gate3 D4-gate2 D5-gate1
+D1-gate3 D10-gate2 D11-gate1
+D1-waiting_area3 D10-gate3 D12-gate2 D11-waiting_area1
+D1-convergence D10-waiting_area3 D11-priority_bypass1 D12-gate3 D2-gate2 D3-gate1
+D1-final_bottleneck D10-convergence D11-priority_bypass2 D12-waiting_area3 D2-gate3 D4-gate2 D3-waiting_area1
+D1-goal D10-final_bottleneck D11-convergence D12-convergence D2-waiting_area3 D3-priority_bypass1 D4-gate3 D5-gate2 D6-gate1
+D10-goal D11-final_bottleneck D12-final_bottleneck D2-convergence D3-priority_bypass2 D4-waiting_area3 D5-gate3 D7-gate2 D6-waiting_area1
+D11-goal D2-final_bottleneck D3-convergence D4-convergence D5-waiting_area3 D6-priority_bypass1 D7-gate3 D8-gate2 D9-gate1
+D12-goal D3-final_bottleneck D4-final_bottleneck D5-convergence D6-priority_bypass2 D7-waiting_area3 D8-gate3 D9-waiting_area1
+D2-goal D5-final_bottleneck D6-convergence D7-convergence D8-waiting_area3 D9-priority_bypass1
+D3-goal D6-final_bottleneck D8-convergence D9-priority_bypass2
+D4-goal D7-final_bottleneck D9-convergence
+D5-goal D8-final_bottleneck
+D6-goal D9-final_bottleneck
+D7-goal
+D8-goal
+D9-goal
+D1-fast_junction D2-slow_path1
+D2-slow_path1 D1-fast_path D3-fast_junction
+D1-merge_point D3-fast_path D2-slow_path2 D4-fast_junction D5-slow_path1
+D5-slow_path1 D1-goal D2-merge_point D3-merge_point D4-fast_path
+D2-goal D3-goal D4-merge_point D5-slow_path2
+D4-goal D5-merge_point
+D5-goal
