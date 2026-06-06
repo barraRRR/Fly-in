@@ -1,7 +1,7 @@
 from class_network import Network, Hub, HubType
 from typing import List, Dict, Tuple, Set
+import heapq
 from blessed import Terminal
-from utils import drone_helices
 
 
 class Gui:
@@ -38,7 +38,7 @@ class Gui:
         
         self.col, self.row = width, height
         self.grid: List[List[Dict[str, str | None]]] = [[{"char": " ", "color": None} for _ in range(self.col)] for _ in range(self.row)]
-        self.grid_block: Set[Tuple[int, int]] = Set()
+        self.grid_block: Set[Tuple[int, int]] = set()
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
 
         self.corners = ["─", "┌", "┐", "└", "┘"]
@@ -57,6 +57,7 @@ class Gui:
         """
         self.grid: List[List[Dict[str, str | None]]] = [[{"char": " ", "color": None} for _ in range(self.col)] for _ in range(self.row)]
         self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
+        self.grid_block: Set[Tuple[int, int]] = set()
         self._map_contour()
         self._place_hubs(frame)
         self._place_links(frame)
@@ -91,22 +92,6 @@ class Gui:
                 else:
                     self.grid[y][x]["char"] = " "
                     self.grid[y][x]["color"] = cont_color
-        
-    def _hub_metadata(self, hub: Hub) -> List[str]:
-        """
-        """
-        occupied = "●" * len(hub.drone_bay)
-        available_space = "○" * (hub.max_drones - len(hub.drone_bay))
-        bay = f"[{occupied}{available_space}]"
-        zone = f"[{hub.zone.name.upper()}]"
-
-        meta_lines = [
-            hub.name.center(self.HUB_WIDTH),
-            zone.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else "",
-            bay.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else ""
-        ]
-        
-        return meta_lines
     
     def _place_hubs(self, frame: int = 0) -> None:
         """
@@ -135,7 +120,17 @@ class Gui:
                             if not char.isspace():
                                 self.grid_block.add((col, row))
             
-            meta_lines = self._hub_metadata(hub)
+            occupied = "●" * len(hub.drone_bay)
+            available_space = "○" * (hub.max_drones - len(hub.drone_bay))
+            bay = f"[{occupied}{available_space}]"
+            zone = f"[{hub.zone.name.upper()}]"
+
+            meta_lines = [
+                hub.name.center(self.HUB_WIDTH),
+                zone.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else "",
+                bay.center(self.HUB_WIDTH) if hub.hub_type == HubType.HUB else ""
+            ]
+
             for i, line in enumerate(meta_lines):
                 row = grid_y + 3 + i
                 if row < self.row - 1:
@@ -146,7 +141,6 @@ class Gui:
                             self.grid[row][col]["color"] = self.PALETTE["drone_color"] if char == "●" else None
                             if not char.isspace():
                                 self.grid_block.add((col, row))
-
 
     def _place_links(self, frame = 0) -> None:
         """
@@ -199,77 +193,98 @@ class Gui:
 
                 line = self._find_line(x1, y1, x2, y2)
                 self._fill_line(line, info, frame)
-                self.grid_block.add((x1, y1), (x2, y2))
+                self.grid_block.add((x1, y1))
+                self.grid_block.add((x2, y2))
 
     def _find_line(
             self,
             x1: int, y1: int,
-            x2: int, y2: int,
-            visited: Set[Tuple[int, int]] = None,
-            path: List[Tuple[int, int]] = None,
+            x2: int, y2: int
             ) -> List[Tuple[int, int]]:
         """
-        Encuentra un camino libre de obstáculos mediante DFS (Depth-First Search)
+        Encuentra un camino libre de obstáculos mediante A* (A-Star).
+        Garantiza el camino más corto minimizando los giros (evitando escaleras).
         """
-        if visited is None:
-            visited = set()
-        if path is None:
-            path = []
+        tie_breaker = 0
+        # Cola: (f_score, giros, orden, cx, cy, dir_x, dir_y, camino)
+        queue = [(0, 0, tie_breaker, x1, y1, 0, 0, [(x1, y1)])]
+        best_costs = {}
 
-        if (x1, y1) == (x2, y2):
-            return path + [(x1, y1)]
+        while queue:
+            f_score, turns, _, cx, cy, c_dx, c_dy, path = heapq.heappop(queue)
 
-        # Marcamos la celda actual como visitada para no entrar en bucles infinitos
-        visited.add((x1, y1))
-        current_path = path + [(x1, y1)]
+            if (cx, cy) == (x2, y2):
+                return path
 
-        abs_dx = abs(x2 - x1)
-        abs_dy = abs(y2 - y1)
-        dx = 1 if x2 > x1 else (-1 if x2 < x1 else 0)
-        dy = 1 if y2 > y1 else (-1 if y2 < y1 else 0)
+            abs_dx = abs(x2 - cx)
+            abs_dy = abs(y2 - cy)
+            target_dx = 1 if x2 > cx else (-1 if x2 < cx else 0)
+            target_dy = 1 if y2 > cy else (-1 if y2 < cy else 0)
 
-        # Ordenamos los posibles movimientos dando prioridad a la dirección que más nos acerque al objetivo
-        moves = []
-        if abs_dx >= abs_dy:
-            if dx != 0: moves.append((x1 + dx, y1))
-            if dy != 0: moves.append((x1, y1 + dy))
-            if dy == 0: moves.extend([(x1, y1 + 1), (x1, y1 - 1)]) # Intentar rodear si estamos alineados en Y
-            if dx != 0: moves.append((x1 - dx, y1))
-            if dy != 0: moves.append((x1, y1 - dy))
-        else:
-            if dy != 0: moves.append((x1, y1 + dy))
-            if dx != 0: moves.append((x1 + dx, y1))
-            if dx == 0: moves.extend([(x1 + 1, y1), (x1 - 1, y1)]) # Intentar rodear si estamos alineados en X
-            if dy != 0: moves.append((x1, y1 - dy))
-            if dx != 0: moves.append((x1 - dx, y1))
+            # Ordenamos los posibles movimientos dando prioridad a la dirección que más nos acerque al objetivo
+            moves = []
+            if abs_dx >= abs_dy:
+                if target_dx != 0: moves.append((cx + target_dx, cy))
+                if target_dy != 0: moves.append((cx, cy + target_dy))
+                if target_dy == 0: moves.extend([(cx, cy + 1), (cx, cy - 1)]) # Intentar rodear si estamos alineados en Y
+                if target_dx != 0: moves.append((cx - target_dx, cy))
+                if target_dy != 0: moves.append((cx, cy - target_dy))
+            else:
+                if target_dy != 0: moves.append((cx, cy + target_dy))
+                if target_dx != 0: moves.append((cx + target_dx, cy))
+                if target_dx == 0: moves.extend([(cx + 1, cy), (cx - 1, cy)]) # Intentar rodear si estamos alineados en X
+                if target_dy != 0: moves.append((cx, cy - target_dy))
+                if target_dx != 0: moves.append((cx - target_dx, cy))
 
-        for nx, ny in moves:
-            if (nx, ny) not in visited and (nx, ny) not in self.grid_block:
-                # Asegurarse de no salir de los límites de la terminal (opcional, pero buena práctica)
-                if 0 <= nx < self.col and 0 <= ny < self.row:
-                    is_valid = True
-                    
-                    # Evitar giros sobre líneas existentes para asegurar que solo se cruzan perpendicularmente
-                    current_char = self.grid[y1][x1]["char"]
-                    if current_char == "│" and nx == x1: # Si estamos sobre una vertical, no podemos movernos verticalmente
-                        is_valid = False
-                    elif current_char == "─" and ny == y1: # Si estamos sobre una horizontal, no podemos movernos horizontalmente
-                        is_valid = False
+            # Eliminar duplicados manteniendo el orden
+            unique_moves = []
+            for m in moves:
+                if m not in unique_moves:
+                    unique_moves.append(m)
+
+            for nx, ny in unique_moves:
+                if (nx, ny) not in self.grid_block:
+                    # Asegurarse de no salir de los límites de la terminal
+                    if 0 <= nx < self.col and 0 <= ny < self.row:
+                        n_dx = nx - cx
+                        n_dy = ny - cy
+                        is_valid = True
                         
-                    # Comprobar la celda de destino para evitar solapamientos
-                    if is_valid and (nx, ny) != (x2, y2):
-                        target_char = self.grid[ny][nx]["char"]
-                        if nx != x1 and target_char not in [" ", "│"]:
+                        # Evitar giros sobre líneas existentes para asegurar cruces perpendiculares
+                        current_char = self.grid[cy][cx]["char"]
+                        if current_char == "│" and nx == cx: # Sobre vertical, no mover vertical
                             is_valid = False
-                        elif nx == x1 and target_char not in [" ", "─"]:
+                        elif current_char == "─" and ny == cy: # Sobre horizontal, no mover horizontal
                             is_valid = False
+                            
+                        # Comprobar la celda de destino para evitar solapamientos
+                        if is_valid and (nx, ny) != (x2, y2):
+                            target_char = self.grid[ny][nx]["char"]
+                            if nx != cx and target_char not in [" ", "│"]:
+                                is_valid = False
+                            elif nx == cx and target_char not in [" ", "─"]:
+                                is_valid = False
 
-                    if is_valid:
-                        result = self._find_line(nx, ny, x2, y2, visited, current_path)
-                        if result:
-                            return result # Devolvemos el primer camino válido encontrado
+                        if is_valid:
+                            new_len = len(path)
+                            # Sumar un giro si cambiamos la dirección (ignoramos el paso inicial donde dir es 0,0)
+                            is_turn = 1 if (c_dx, c_dy) != (0, 0) and (c_dx, c_dy) != (n_dx, n_dy) else 0
+                            new_turns = turns + is_turn
+                            
+                            state_key = (nx, ny, n_dx, n_dy)
+                            
+                            # Comprobamos si hemos encontrado una ruta mejor hacia este estado
+                            if state_key not in best_costs or best_costs[state_key] > (new_len, new_turns):
+                                best_costs[state_key] = (new_len, new_turns)
+                                
+                                # Heurística: Distancia de Manhattan al objetivo
+                                h = abs(x2 - nx) + abs(y2 - ny)
+                                f = new_len + h
+                                tie_breaker += 1
+                                
+                                heapq.heappush(queue, (f, new_turns, tie_breaker, nx, ny, n_dx, n_dy, path + [(nx, ny)]))
 
-        return [] # Retorna vacío si no hay camino posible desde este punto (provoca backtracking)
+        return [] # Retorna vacío si no hay camino posible
 
     def _fill_line(self, line: List[Tuple[int, int]], info: str = None, frame: int = 0) -> None:
         """
