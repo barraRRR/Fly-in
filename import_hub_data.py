@@ -5,10 +5,7 @@ import json
 
 
 def import_hub_data() -> None:
-    """Parses available map logic sequentially storing variable bounds
-    defining valid parameter lists into JSON formats for dynamic tests
-    execution dynamically.
-    """
+    """Parses maps to extract and store valid parameters in JSON."""
 
     hub_data = Path('hub_data.json')
     if hub_data:

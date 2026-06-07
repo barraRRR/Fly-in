@@ -22,8 +22,7 @@ class Simulator:
     """Handles the main simulation logic and state for the drone network.
 
     Args:
-        net (Network): The network object containing hubs
-        and parsed connections.
+        net (Network): Network object containing hubs and links.
     """
     def __init__(self, net: Network) -> None:
         self.net = net
@@ -53,22 +52,16 @@ class Simulator:
             current_path: List[Hub] = None,
             all_paths: List[List[Hub]] = None
             ) -> List[Path]:
-        """Recursively finds all valid paths from a starting hub
-        to the end hub.
+        """Recursively finds all valid paths from a starting hub to the end.
 
         Args:
-            start (Hub, optional): The current hub being evaluated.
-            Defaults to None.
-            visited (Set[Hub], optional): Set of already visited hubs
-            to prevent loops. Defaults to None.
-            current_path (List[Hub], optional): The current sequence of hubs
-            in the traversal. Defaults to None.
-            all_paths (List[List[Hub]], optional): Collection of all
-            found successful paths. Defaults to None.
+            start (Hub, optional): Current hub being evaluated.
+            visited (Set[Hub], optional): Visited hubs to prevent loops.
+            current_path (List[Hub], optional): Current hub sequence.
+            all_paths (List[List[Hub]], optional): Found valid paths.
 
         Returns:
-            List[Path]: A list containing all possible Path objects linking
-            start and end points.
+            List[Path]: All possible Path objects linking start and end points.
         """
         if start is None:
             start = self.net.start_hub
@@ -101,16 +94,14 @@ class Simulator:
         return all_paths
     
     def _flight_planner(self, drone: Drone) -> None:
-        """Plans the next flight path for a given drone based on
-        available routes and rules.
+        """Plans the next flight path for a drone based on available routes.
 
         Args:
-            drone (Drone): The drone requiring a flight path evaluation.
+            drone (Drone): Drone requiring flight path evaluation.
 
         Raises:
-            DroneCantMove: If no available paths exist or all valid
-            routes are blocked.
-            HubFullError: If the destination hubs are at maximum capacity.
+            DroneCantMove: If no paths exist or routes are blocked.
+            HubFullError: If destination hubs are at maximum capacity.
             NoLinksAvailableError: If no link connection capacity remains.
         """
         available_paths = {
@@ -161,10 +152,9 @@ class Simulator:
         """Modifies traffic counters for the link between two given hubs.
 
         Args:
-            origin (Hub): The hub from which the drone is departing.
-            dest (Hub): The destination hub the drone is heading to.
-            add (bool): If True, increments the link usage;
-            if False, decrements it.
+            origin (Hub): Hub from which the drone is departing.
+            dest (Hub): Destination hub the drone is heading to.
+            add (bool): True to increment usage, False to decrement.
         """
         mod = 1 if add == True else -1
         for link in origin.links:
@@ -175,14 +165,11 @@ class Simulator:
                 link['incoming_drones'] += mod
 
     def simulate_turn(self) -> Generator[Dict[str, str], None, None]:
-        """Generator that emits progressive events during each
-        turn of the simulation.
+        """Generator that emits progressive events during each turn.
 
         Yields:
-            Dict[str, str]: A dictionary containing event types
-            and descriptive messages.
-            This allows progressive updates to the GUI without
-            blocking operations.
+            Dict[str, str]: Contains event types and descriptive messages
+            for progressive GUI updates.
         """
         available_drones = []
 
@@ -282,12 +269,10 @@ class Simulator:
         sleep(utils.PACE * 3)
     
     def _output_turn(self) -> str:
-        """Generates and records the consolidated text output
-        for a single simulation turn.
+        """Generates text output for a single simulation turn.
 
         Returns:
-            str: A formatted string detailing the movement of all drones
-            currently in motion.
+            str: Formatted string detailing active drone movements.
         """
         drone_strings = [
             f"{drone.id}-{drone.destination.name}"
@@ -301,9 +286,7 @@ class Simulator:
         return final_str
     
     def _get_metrics(self) -> None:
-        """Calculates, evaluates, and stores the final performance metrics
-        after a run.
-        """
+        """Calculates and stores final performance metrics after a run."""
         self.metrics["total_path_cost"] = sum(
             [d.total_moves for d in self.delivered_drones]
             )

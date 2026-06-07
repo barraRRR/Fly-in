@@ -2,10 +2,8 @@ from class_network import Network
 from class_parser import MapParser
 from class_simulator import Simulator
 from class_gui import Gui
-from utils import (
-    clear, menu, wait_for_enter, select_map_file, welcome, goodbye,
-    slice_str, PACE, FAST, DIRECT, DELAY, STATUS, WARNING, UX_MAX, UX_STD, UX
-)
+from utils import clear, menu, wait_for_enter, select_map_file
+from utils import welcome, goodbye, DELAY, STATUS, ERROR, UX_MAX, UX_STD, UX
 from typing import List
 from time import sleep
 import sys
@@ -13,9 +11,7 @@ import utils
 
 
 def main() -> None:
-    """Main execution loop for the Fly-In program.
-    Handles application state and interactive flow.
-    """
+    """Main execution loop handling application state and interactive flow."""
     welcome()
     while True:
         while True:
@@ -63,13 +59,11 @@ def main() -> None:
                 col_left: List[str],
                 col_right: List[str],
                 map_name: str) -> None:
-            """Refreshes the GUI elements safely during
-            the simulation runtime.
+            """Refreshes the GUI elements safely during simulation runtime.
 
             Args:
                 gui (Gui): The main graphical interface instance.
-                sim (Simulator): The active simulator instance
-                with current turn data.
+                sim (Simulator): The active simulator instance.
                 col_left (List[str]): Drone status event log records.
                 col_right (List[str]): Turn completion logs.
                 map_name (str): Current active map name.
@@ -129,17 +123,14 @@ def main() -> None:
 
 
 def confirm_map(gui: Gui, map_name: str) -> bool:
-    """Prompts the user to review and confirm
-    the loaded map before simulation begins.
+    """Prompts the user to review and confirm the loaded map.
 
     Args:
-        gui (Gui): The graphical interface containing
-        the rendered map representation.
+        gui (Gui): Interface containing the rendered map.
         map_name (str): Chosen map identifier.
 
     Returns:
-        bool: True if the user confirms the map,
-        False to return to map selection.
+        bool: True if confirmed, False to return to map selection.
     """
     clear()
     col = gui.col if gui.col < UX_MAX else UX_STD
@@ -163,15 +154,13 @@ def confirm_map(gui: Gui, map_name: str) -> bool:
 
 
 def configure_ux(gui: Gui) -> int:
-    """Displays user experience configuration menus,
-    allowing speed and verbosity adjustments.
+    """Displays UX configuration menus for speed adjustments.
 
     Args:
-        gui (Gui): The active GUI instance to compute column
-        centering based on window size.
+        gui (Gui): Active GUI instance for column centering.
 
     Returns:
-        int: The selected configuration index (e.g., manual, automatic, fast).
+        int: Selected configuration index (e.g., manual, automatic, fast).
     """
     col = gui.col if gui.col < UX_MAX else UX_STD
     print("\n" + "═" * col)

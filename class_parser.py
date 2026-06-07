@@ -3,29 +3,23 @@ from typing import Dict, List
 
 
 class MapParser:
-    """Encapsulates plain-text document logic reading variables safely
-    establishing dict mappings targeting pydantic instantiation
-    dynamically.
+    """Parses map text files into network dictionaries.
 
     Args:
-        path (str): Pointer strictly referring existing project relative
-            folder path containing the map.
+        path (str): Relative path to the map file.
     """
     def __init__(self, path: str) -> None:
         self.path = path
         self.data = self._parse_map()
 
     def _parse_map(self) -> Dict:
-        """Executes line-by-line file logic parsing boundaries mapping
-        string types iteratively onto expected application dictionaries.
+        """Reads the map file and populates the network data dictionary.
 
         Returns:
-            Dict: Nested data struct fully populated against required
-                definitions dictating network topology logically mapped.
+            Dict: Network topology data.
 
         Raises:
-            ValueError: Identifies any structural parsing fault, metadata
-                absence or duplication logically violating schema guidelines.
+            ValueError: On structural parsing faults or invalid schema.
         """
         first_line_nb_drones = False
         payload: Dict = {
@@ -84,16 +78,13 @@ class MapParser:
 
     @staticmethod
     def _parse_hub(line: str) -> Dict:
-        """Extracts node configuration data dynamically bounded through
-        brackets decoding hub mapping traits uniquely parsed.
+        """Extracts hub configuration data from a text line.
 
         Args:
-            line (str): Raw unsanitized text row read matching hub
-                formatting prefixes strictly defined.
+            line (str): Raw text line matching hub formatting.
 
         Returns:
-            Dict: Struct mapping title, geometries, bounding limits, and
-                categorical configurations dynamically fetched.
+            Dict: Hub title, coordinates, and configurations.
         """
         line = line.lower().strip()
         hub_type, data = line.split(':', 1)
@@ -135,16 +126,13 @@ class MapParser:
 
     @staticmethod
     def _parse_connection(line: str) -> Dict:
-        """Determines string logic mappings binding linking segments
-        tracking point targets alongside required limitations bound physically.
+        """Extracts connection data mapping targets and capacities.
 
         Args:
-            line (str): Text row referencing direct connection flags
-                strictly resolving point mapping boundaries.
+            line (str): Text row referencing direct connections.
 
         Returns:
-            Dict: Sub-dictionary structuring A and B target nodes paired
-                along with connection cap metadata values.
+            Dict: Start and end nodes with connection capacity.
         """
         line = line.lower().strip()
         data = line.split(':', 1)[1]

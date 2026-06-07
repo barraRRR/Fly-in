@@ -6,13 +6,10 @@ from utils import UX_MAX, UX_STD, slice_str
 
 
 class Gui:
-    """Manages internal logic mapping graphical representations safely over
-    term terminal displays cleanly resolving dynamic map boundaries.
+    """Manages terminal map representation and dynamic boundaries.
 
     Args:
-        net (Network): Safely bound topological data framework wrapping
-            physical nodes recursively generated across standard project
-            layouts logically parsed.
+        net (Network): The network topology data.
     """
     HUB_WIDTH = 20
     HUB_HEIGHT = 6
@@ -25,23 +22,27 @@ class Gui:
         "deep_grren": "#243837",
         "line": "#FFFFFF"
     }
-    
+
     def __init__(self, net: Network) -> None:
         self.net = net
         self.all_hubs = (
             [self.net.start_hub] + self.net.hub + [self.net.end_hub]
         )
-        
+
         min_x = min(hub.coords[0] for hub in self.all_hubs)
         max_x = max(hub.coords[0] for hub in self.all_hubs)
         min_y = min(hub.coords[1] for hub in self.all_hubs)
         max_y = max(hub.coords[1] for hub in self.all_hubs)
-        
+
         self.min_x = min_x
         self.min_y = min_y
 
         width = (max_x - min_x + 1) * self.HUB_WIDTH + self.MARGIN * 2
-        height = (max_y - min_y + 1) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN * 2
+        height = (
+            (max_y - min_y + 1) *
+            (self.HUB_HEIGHT + self.METADATA_HEIGHT) +
+            self.MARGIN * 2
+            )
 
         self.col, self.row = width, height
         self.grid: List[List[Dict[str, str | None]]] = [
@@ -49,7 +50,7 @@ class Gui:
             for _ in range(self.row)
         ]
         self.grid_block: Set[Tuple[int, int]] = set()
-        self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
+        self.hub_pos_map: Dict[Hub, Tuple[int, int]] = {}
 
         self.corners = ["┌", "┐", "└", "┘"]
         self.hor_line = "─"
@@ -57,36 +58,32 @@ class Gui:
         self.point = "■"
 
         self.term = Terminal()
-        self.link_paths_cache: Dict[Tuple[str, str], List[Tuple[int, int]]] = {}
+        self.link_paths_cache: Dict[
+            Tuple[str, str], List[Tuple[int, int]]
+            ] = {}
         self.color_cache: Dict[str, str] = {}
         self._map_contour()
         self._place_hubs()
         self._place_links()
-    
+
     def update(self, frame: int = 0) -> None:
-        """Flushes existing graphic matrices appending sequential logic
-        iterating visual boundaries mapping animation sequences natively.
+        """Updates the graphical grid for the current frame.
 
         Args:
-            frame (int, optional): Numeric sequence index targeting active
-                animation configurations logically looping parameters
-                seamlessly safely. Defaults to 0.
+            frame (int, optional): Animation frame index. Defaults to 0.
         """
         self.grid: List[List[Dict[str, str | None]]] = [
             [{"char": " ", "color": None} for _ in range(self.col)]
             for _ in range(self.row)
         ]
-        self.hub_pos_map: Dict[Hub, Tuple[int,int]] = {}
+        self.hub_pos_map: Dict[Hub, Tuple[int, int]] = {}
         self.grid_block: Set[Tuple[int, int]] = set()
         self._map_contour()
         self._place_hubs(frame)
         self._place_links(frame)
 
     def _map_contour(self) -> None:
-        """Generates graphical bordering boundaries ensuring map UI matrices
-        cleanly delimit screen space constraints reliably logically mapped
-        safely bounding grid layouts efficiently.
-        """
+        """Generates graphical borders for the UI grid."""
         topbot, sides, top_l = "─", "│", "┌"
         top_r, bot_l, bot_r = "┐", "└", "┘"
         cont_color = self.PALETTE["line"]
@@ -114,17 +111,12 @@ class Gui:
                 else:
                     self.grid[y][x]["char"] = " "
                     self.grid[y][x]["color"] = cont_color
-    
+
     def _place_hubs(self, frame: int = 0) -> None:
-        """Maps explicit topological hub structs strictly binding character
-        sets establishing nodes visually referencing active grid
-        configurations seamlessly cleanly mapped safely inside rows
-        predictably bounding node boundaries logically structured.
+        """Draws hub representations on the active grid.
 
         Args:
-            frame (int, optional): Alternating temporal loop binding
-                animation configs cleanly resolved targeting dynamic states
-                seamlessly integrated cleanly properly mapped. Defaults to 0.
+            frame (int, optional): Animation frame index. Defaults to 0.
         """
         hub_lines = [
             "  __  ".center(self.HUB_WIDTH),
@@ -188,15 +180,10 @@ class Gui:
                                 self.grid_block.add((col, row))
 
     def _place_links(self, frame = 0) -> None:
-        """Parses internal linking maps sequentially structuring line
-        constraints safely binding paths cleanly tracing route
-        trajectories physically dynamically processed resolving spatial
-        layouts accurately bounding A-Star mappings safely logically processed.
+        """Draws the connecting lines between hubs using A* routing.
 
         Args:
-            frame (int, optional): Temporal numerical flag targeting logical
-                animation offsets properly integrated cleanly dynamically
-                triggering shifts cleanly mapping drones. Defaults to 0.
+            frame (int, optional): Animation frame index. Defaults to 0.
         """
         established_links = []
         sorted_hubs = sorted(
@@ -262,23 +249,16 @@ class Gui:
             x1: int, y1: int,
             x2: int, y2: int
             ) -> List[Tuple[int, int]]:
-        """Finds an obstacle-free path using the A* (A-Star) search algorithm.
-
-        Ensures the optimal shortest trajectory dynamically minimizing
-        sequential turns avoiding geometric staircases cleanly optimizing
-        grid layout constraints reliably cleanly effectively.
+        """Finds an obstacle-free path using the A* search algorithm.
 
         Args:
-            x1 (int): Starting X map boundary axis coordinate.
-            y1 (int): Starting Y map boundary axis coordinate.
-            x2 (int): Destination X mapping constraint parameter natively
-                bounding grid layouts.
+            x1 (int): Starting X coordinate.
+            y1 (int): Starting Y coordinate.
+            x2 (int): Destination X coordinate.
             y2 (int): Destination Y coordinate.
 
         Returns:
-            List[Tuple[int, int]]: Sequential point constraints logically
-                linking successful matrix paths perfectly structured cleanly
-                optimized gracefully mapped effectively seamlessly executed.
+            List[Tuple[int, int]]: Sequential coordinates of the path.
         """
         tie_breaker = 0
         # Cola: (f_score, giros, orden, cx, cy, dir_x, dir_y, camino)
@@ -380,18 +360,12 @@ class Gui:
         return [] # Retorna vacío si no hay camino posible
 
     def _fill_line(self, line: List[Tuple[int, int]], info: str = None, frame: int = 0) -> None:
-        """Populates characters dynamically mapped rendering visual pathways
-        tracking structured routes across matrix bounds properly bounding
-        constraints cleanly executed safely.
+        """Draws the path trajectory characters on the grid.
 
         Args:
-            line (List[Tuple[int, int]]): Mathematical point trajectory
-                struct mappings resolved strictly previously tracking logic
-                segments perfectly mapped efficiently safely mapping correctly.
-            info (str, optional): Metric traffic capacities linking
-                dynamically tracked natively. Defaults to None.
-            frame (int, optional): Animation flag smoothly resolving updates
-                clearly. Defaults to 0.
+            line (List[Tuple[int, int]]): Path coordinates.
+            info (str, optional): Traffic capacity text. Defaults to None.
+            frame (int, optional): Animation frame index. Defaults to 0.
         """
         # Iteramos desde el segundo elemento hasta el penúltimo para
         # evitar desbordamientos
@@ -435,19 +409,12 @@ class Gui:
                 self._place_link_info(dx, dy, info, frame)
 
     def _place_drone(self, x: int, y: int, frame: int = 0) -> str:
-        """Places drone ASCII visuals tracking mapping points inside active
-        grid parameters cleanly bounding variables mapping dynamically.
+        """Places drone ASCII representation on the grid.
 
         Args:
-            x (int): Horizontal placement cleanly bounding natively
-                dynamically safely bounds perfectly dynamically correctly
-                executed neatly.
-            y (int): Vertical cleanly cleanly smoothly natively safely
-                gracefully cleanly intelligently cleanly seamlessly flawlessly
-                mapped flawlessly beautifully elegantly efficiently smartly.
-            frame (int, optional): Flags loops elegantly correctly smoothly
-                mapped cleanly optimally mapping properly smoothly dynamically.
-                Defaults to 0.
+            x (int): Horizontal coordinate.
+            y (int): Vertical coordinate.
+            frame (int, optional): Animation frame index. Defaults to 0.
         """
         drone1 = "+♦+"
         drone2 = "✕♦✕"
@@ -460,18 +427,13 @@ class Gui:
 
     def _place_link_info(
             self, x: int, y: int, info: str, frame: int = 0) -> None:
-        """Anchors path metrics accurately referencing node traffic seamlessly
-        tracing values appropriately perfectly dynamically optimally
-        correctly mapping smartly correctly cleanly safely neatly.
+        """Anchors traffic capacity metrics text on the route.
 
         Args:
-            x (int): Node axis coordinate limits dynamically effectively
-                cleanly bounded.
-            y (int): Matrix axis parameters smartly accurately mapped
-                efficiently.
-            info (str): Data string correctly referencing traffic flawlessly
-                smoothly updated seamlessly neatly gracefully.
-            frame (int, optional): Animation constraints natively. Defaults to 0.
+            x (int): X coordinate for text.
+            y (int): Y coordinate for text.
+            info (str): The traffic data string.
+            frame (int, optional): Animation frame index. Defaults to 0.
         """
         mid = len(info) // 2
         for i, char in enumerate(info):
@@ -495,19 +457,14 @@ class Gui:
                 off -= 1
 
     def _get_colored_char(self, c: str, color: str | None) -> str:
-        """Wraps characters strictly executing dynamic formatting safely
-        mapping native term outputs dynamically dynamically cleanly
-        efficiently accurately correctly successfully.
+        """Applies terminal color codes to a given character.
 
         Args:
-            c (str): Target string elegantly dynamically wrapped effectively
-                successfully successfully cleanly perfectly smoothly elegantly.
-            color (str | None): Valid mapped property efficiently correctly
-                gracefully successfully neatly efficiently perfectly nicely.
+            c (str): The character to format.
+            color (str | None): Color name or hex code.
 
         Returns:
-            str: Formatted perfectly successfully elegantly dynamically
-                successfully reliably smoothly successfully natively.
+            str: Formatted string with color codes.
         """
         if not color or color == "rainbow":
             return c
@@ -529,14 +486,10 @@ class Gui:
         return c
 
     def print_grid(self, grid: List[List[Dict[str, str]]]) -> None:
-        """Executes full term rendering flawlessly efficiently natively
-        mapping successfully correctly safely beautifully optimally
-        seamlessly gracefully reliably correctly perfectly smoothly.
+        """Renders the entire UI grid to the terminal.
 
         Args:
-            grid (List[List[Dict[str, str]]]): Core structural layout
-                successfully efficiently gracefully efficiently smartly perfectly
-                efficiently smoothly successfully smoothly gracefully.
+            grid (List[List[Dict[str, str]]]): The layout matrix to print.
         """
         for row in grid:
             print("".join(
@@ -544,12 +497,10 @@ class Gui:
             ))
 
     def _place_map_name(self, map_name: str) -> str:
-        """Appends formatted titles perfectly mapping bounds gracefully
-        successfully correctly successfully safely optimally nicely nicely.
+        """Prints the formatted map title banner.
 
         Args:
-            map_name (str): Label intelligently effectively seamlessly
-                elegantly flawlessly dynamically perfectly correctly correctly.
+            map_name (str): The name of the map.
         """
         col = self.col if self.col < UX_MAX else UX_STD
         print(
@@ -565,25 +516,15 @@ class Gui:
                     col_right: List[str],
                     map_name: str,
                     text_margin: int = 6) -> None:
-        """Renders information panels seamlessly gracefully correctly
-        perfectly safely mapping cleanly gracefully smartly dynamically
-        elegantly intelligently correctly effectively nicely safely.
+        """Renders information panels with simulation status and logs.
 
         Args:
-            drones_left (int): Active tracking counter successfully
-                efficiently smoothly smoothly smoothly gracefully smoothly
-                optimally accurately dynamically intelligently.
-            turn_num (int): Sequencer tracking index nicely smoothly
-                successfully successfully smoothly effectively reliably.
-            col_left (List[str]): Struct mapping correctly nicely
-                successfully safely beautifully nicely nicely neatly cleanly.
-            col_right (List[str]): Properly gracefully gracefully safely
-                neatly successfully nicely cleanly nicely smartly efficiently.
-            map_name (str): Map reference effectively perfectly smoothly
-                successfully gracefully beautifully safely effectively.
-            text_margin (int, optional): Boundary perfectly cleanly
-                gracefully beautifully smoothly successfully safely perfectly.
-                Defaults to 6.
+            drones_left (int): Remaining drones count.
+            turn_num (int): Current turn index.
+            col_left (List[str]): Drone status event logs.
+            col_right (List[str]): Turn completion logs.
+            map_name (str): Name of the current map.
+            text_margin (int, optional): Center margin width. Defaults to 6.
         """
         col = self.col if self.col < UX_MAX else UX_STD
         sub_size = col // 2 - (text_margin // 2)
@@ -657,12 +598,10 @@ class Gui:
         self.print_grid(grid)
 
     def _metrics_panel(self, metrics: Dict[str, Any]) -> None:
-        """Validates summary statistics smoothly elegantly properly
-        accurately correctly optimally nicely successfully gracefully.
+        """Displays the final performance metrics summary.
 
         Args:
-            metrics (Dict[str, Any]): Evaluation payload efficiently
-                properly correctly successfully cleanly seamlessly effectively.
+            metrics (Dict[str, Any]): Evaluation payload.
         """
         col = self.col if self.col < UX_MAX else UX_STD
 

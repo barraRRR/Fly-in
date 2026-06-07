@@ -9,16 +9,13 @@ import json
 
 
 def import_texts(language: str) -> Tuple[Dict, Dict, Dict, Dict]:
-    """Imports application texts safely from a targeted JSON file based
-    on the selected language.
+    """Imports application texts safely from a JSON file.
 
     Args:
-        language (str): Locale code (e.g., 'en') defining which JSON
-            file to fetch.
+        language (str): Locale code (e.g., 'en').
 
     Returns:
-        Tuple[Dict, Dict, Dict, Dict]: Grouped dictionaries representing
-            UX, status, warnings, and errors.
+        Tuple[Dict, Dict, Dict, Dict]: UX, status, warnings, errors.
     """
     file = f'{language}_texts.json'
 
@@ -49,22 +46,18 @@ drone_helices = count(1)
 
 
 def clear() -> None:
-    """Clears the console or terminal screen cleanly.
-    
-    Checks the underlying OS in order to dispatch platform-specific commands ('cls' or 'clear').
-    """
+    """Clears the console or terminal screen cleanly."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def menu(items: List[str]) -> int:
-    """Deploys an interactive terminal UI menu containing selectable options.
+    """Deploys an interactive terminal UI menu.
 
     Args:
-        items (List[str]): List of textual options to display sequentially.
+        items (List[str]): List of textual options to display.
 
     Returns:
-        int: The index corresponding to the user's selected string.
-            Returns -1 if cancelled.
+        int: Index of the selected string, or -1 if cancelled.
     """
     menu_obj = TerminalMenu(
         items,
@@ -78,12 +71,10 @@ def menu(items: List[str]) -> int:
 
 
 def select_map_file() -> str:
-    """Invokes a visual directory traversal tool enabling users to pick
-    a `.txt` file map.
+    """Invokes a visual tool enabling users to pick a `.txt` map.
 
     Returns:
-        str: The fully qualified or relative file path pointing to the
-            selected map.
+        str: File path pointing to the selected map.
     """
     maps_root = Path(".")
     current_dir = maps_root
@@ -147,7 +138,7 @@ def select_map_file() -> str:
         
 
 def title() -> str:
-    """Generates the ASCII title graphic for the start or end game screens.
+    """Generates the ASCII title graphic for game screens.
 
     Returns:
         str: Centered multiline ASCII string.
@@ -165,11 +156,10 @@ def title() -> str:
 
 
 def wait_for_enter(message: str = None) -> None:
-    """Halts code execution until the user manually strikes the 'Enter' key.
+    """Halts execution until the user presses the 'Enter' key.
 
     Args:
-        message (str, optional): Custom override string to display before
-            halting. Defaults to None.
+        message (str, optional): Custom override string to display.
     """
     if message is None:
         message = UX["press_enter"]
@@ -177,9 +167,7 @@ def wait_for_enter(message: str = None) -> None:
 
 
 def welcome() -> str:
-    """Displays the interactive title graphic explicitly dedicated for
-    program launch.
-    """
+    """Displays the interactive title graphic for program launch."""
     clear()
     print()
     print(title(), end="\n" * 3)
@@ -187,9 +175,7 @@ def welcome() -> str:
 
 
 def goodbye() -> str:
-    """Exits the application gracefully displaying parting ASCII graphics
-    and halting the process.
-    """
+    """Exits the application gracefully displaying parting graphics."""
     clear()
     print("\n\n")
     print(title(), end="\n" * 3)
@@ -197,19 +183,19 @@ def goodbye() -> str:
     sys.exit(0)
 
 
-def slice_str(str_list: List[str], max_char_line: int, max_lines: int) -> List[str]:
-    """Splits and truncates a list of strings strictly conforming to
-    column-width/max-height formatting.
+def slice_str(
+        str_list: List[str],
+        max_char_line: int,
+        max_lines: int) -> List[str]:
+    """Truncates a list of strings to fit column and height limits.
 
     Args:
         str_list (List[str]): The incoming unsanitized rows.
-        max_char_line (int): Permitted character boundary per line row.
-        max_lines (int): Terminal allowed bounding limit height for
-            the content.
+        max_char_line (int): Maximum characters per line.
+        max_lines (int): Maximum allowed height.
 
     Returns:
-        List[str]: Refactored strings formatted into safely constrained
-            boundaries.
+        List[str]: Strings formatted into constrained boundaries.
     """
     str_list = str_list[:max_lines]
     new = [line for s in str_list for line in wrap(s, max_char_line)]
@@ -217,15 +203,13 @@ def slice_str(str_list: List[str], max_char_line: int, max_lines: int) -> List[s
 
 
 def offset_sequence(max_offset=None):
-    """Generates an alternating infinite or bound numerical sequence
-    (e.g., 0, 1, -1, 2, -2).
+    """Generates an alternating sequence (e.g., 0, 1, -1, 2, -2).
 
     Args:
-        max_offset (int, optional): Constrains loop upper magnitude
-            boundary. Defaults to None.
+        max_offset (int, optional): Constrains loop upper boundary.
 
     Yields:
-        int: Sequential incremental/decremental offset iterations.
+        int: Sequential alternating offset iterations.
     """
     yield 0
     offset = 1
