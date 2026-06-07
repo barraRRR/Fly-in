@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Union, Optional, Generator
 from itertools import count
 from pathlib import Path
 from simple_term_menu import TerminalMenu
@@ -17,24 +17,27 @@ def import_texts(language: str) -> Tuple[Dict, Dict, Dict, Dict]:
     Returns:
         Tuple[Dict, Dict, Dict, Dict]: UX, status, warnings, errors.
     """
-    file = f'{language}_texts.json'
+    file = f"{language}_texts.json"
 
     try:
-        print('Loading texts...', end='')
-        with open(file, 'r') as raw:
+        print("Loading texts...", end="")
+        with open(file, "r") as raw:
             texts = json.load(raw)
-            print(' OK')
+            print(" OK")
             return (
-                texts['ux'], texts['status'], texts["warning"], texts['error']
+                texts["ux"],
+                texts["status"],
+                texts["warning"],
+                texts["error"],
             )
 
     except FileNotFoundError as e:
-        print(' FAIL')
-        print(f'CRITICAL ERROR: {e}')
-        sys.exit('Aborting launch...')
+        print(" FAIL")
+        print(f"CRITICAL ERROR: {e}")
+        sys.exit("Aborting launch...")
 
 
-UX, STATUS, WARNING, ERROR = import_texts('en')
+UX, STATUS, WARNING, ERROR = import_texts("en")
 UX_MAX: int = 500
 UX_STD: int = 100
 DELAY: float = 0.5
@@ -47,7 +50,7 @@ drone_helices = count(1)
 
 def clear() -> None:
     """Clears the console or terminal screen cleanly."""
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system("cls" if os.name == "nt" else "clear")
 
 
 def menu(items: List[str]) -> int:
@@ -64,13 +67,13 @@ def menu(items: List[str]) -> int:
         title="Use ↑ ↓ arrows to navigate, ENTER to select",
         menu_cursor="➜ ",
         menu_cursor_style=("fg_cyan", "bold"),
-        show_search_hint=False
+        show_search_hint=False,
     )
     idx = menu_obj.show()
     return idx if idx is not None else -1
 
 
-def select_map_file() -> str:
+def select_map_file() -> Union[str, None]:
     """Invokes a visual tool enabling users to pick a `.txt` map.
 
     Returns:
@@ -89,12 +92,12 @@ def select_map_file() -> str:
         print(f"\n📁 Path: {current_rel}\n")
 
         items = []
-        paths = []
+        paths: List[Union[str, None]] = []
 
         if current_dir != maps_root:
             items.append("⬅️  Back to parent")
             paths.append("..")
-        
+
         try:
             entries = sorted(current_dir.iterdir())
             for entry in entries:
@@ -118,11 +121,13 @@ def select_map_file() -> str:
         paths.append(None)
 
         idx = menu(items)
-        
-        if idx is None or paths[idx] is None:
+
+        if idx is None:
             return None
 
         selected = paths[idx]
+        if selected is None:
+            return None
 
         if selected == "..":
             current_dir = current_dir.parent
@@ -135,7 +140,7 @@ def select_map_file() -> str:
 
         if path.is_file() and path.suffix == ".txt":
             return str(path)
-        
+
 
 def title() -> str:
     """Generates the ASCII title graphic for game screens.
@@ -143,19 +148,19 @@ def title() -> str:
     Returns:
         str: Centered multiline ASCII string.
     """
-    ascii_art = r"""   ___  ___                                     
- /'___\/\_ \                      __            
-/\ \__/\//\ \    __  __          /\_\    ___    
-\ \ ,__\ \ \ \  /\ \/\ \  _______\/\ \ /' _ `\  
- \ \ \_/  \_\ \_\ \ \_\ \/\______\\ \ \/\ \/\ \ 
+    ascii_art = r"""   ___  ___
+ /'___\/\_ \
+/\ \__/\//\ \    __  __          /\_\    ___
+\ \ ,__\ \ \ \  /\ \/\ \  _______\/\ \ /' _ `\
+ \ \ \_/  \_\ \_\ \ \_\ \/\______\\ \ \/\ \/\ \
   \ \_\   /\____\\/`____ \/______/ \ \_\ \_\ \_\
    \/_/   \/____/ `/___/> \         \/_/\/_/\/_/
-                     /\___/                     
+                     /\___/
                      \/__/                      """
     return ascii_art.center(100)
 
 
-def wait_for_enter(message: str = None) -> None:
+def wait_for_enter(message: Optional[str]) -> None:
     """Halts execution until the user presses the 'Enter' key.
 
     Args:
@@ -166,12 +171,12 @@ def wait_for_enter(message: str = None) -> None:
     input(message)
 
 
-def welcome() -> str:
+def welcome() -> None:
     """Displays the interactive title graphic for program launch."""
     clear()
     print()
     print(title(), end="\n" * 3)
-    wait_for_enter()
+    wait_for_enter(None)
 
 
 def goodbye() -> str:
@@ -184,9 +189,8 @@ def goodbye() -> str:
 
 
 def slice_str(
-        str_list: List[str],
-        max_char_line: int,
-        max_lines: int) -> List[str]:
+    str_list: List[str], max_char_line: int, max_lines: int
+) -> List[str]:
     """Truncates a list of strings to fit column and height limits.
 
     Args:
@@ -202,7 +206,7 @@ def slice_str(
     return new
 
 
-def offset_sequence(max_offset=None):
+def offset_sequence(max_offset: Optional[int] = None) -> Generator:
     """Generates an alternating sequence (e.g., 0, 1, -1, 2, -2).
 
     Args:

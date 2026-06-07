@@ -1,5 +1,5 @@
 from class_network import Network, Hub, HubType
-from typing import List, Dict, Tuple, Set, Any
+from typing import List, Dict, Tuple, Set, Any, Optional
 import heapq
 from blessed import Terminal
 from utils import UX_MAX, UX_STD, slice_str
@@ -11,6 +11,7 @@ class Gui:
     Args:
         net (Network): The network topology data.
     """
+
     HUB_WIDTH = 20
     HUB_HEIGHT = 6
     METADATA_HEIGHT = 3
@@ -20,7 +21,7 @@ class Gui:
         "warning": "#FE7733",
         "pale_green": "#C6FF36",
         "deep_grren": "#243837",
-        "line": "#FFFFFF"
+        "line": "#FFFFFF",
     }
 
     def __init__(self, net: Network) -> None:
@@ -38,14 +39,12 @@ class Gui:
         self.min_y = min_y
 
         width = (max_x - min_x + 1) * self.HUB_WIDTH + self.MARGIN * 2
-        height = (
-            (max_y - min_y + 1) *
-            (self.HUB_HEIGHT + self.METADATA_HEIGHT) +
-            self.MARGIN * 2
-            )
+        height = (max_y - min_y + 1) * (
+            self.HUB_HEIGHT + self.METADATA_HEIGHT
+        ) + self.MARGIN * 2
 
         self.col, self.row = width, height
-        self.grid: List[List[Dict[str, str | None]]] = [
+        self.grid: List[List[Dict[str, Optional[str]]]] = [
             [{"char": " ", "color": None} for _ in range(self.col)]
             for _ in range(self.row)
         ]
@@ -60,7 +59,7 @@ class Gui:
         self.term = Terminal()
         self.link_paths_cache: Dict[
             Tuple[str, str], List[Tuple[int, int]]
-            ] = {}
+        ] = {}
         self.color_cache: Dict[str, str] = {}
         self._map_contour()
         self._place_hubs()
@@ -72,12 +71,12 @@ class Gui:
         Args:
             frame (int, optional): Animation frame index. Defaults to 0.
         """
-        self.grid: List[List[Dict[str, str | None]]] = [
+        self.grid = [
             [{"char": " ", "color": None} for _ in range(self.col)]
             for _ in range(self.row)
         ]
-        self.hub_pos_map: Dict[Hub, Tuple[int, int]] = {}
-        self.grid_block: Set[Tuple[int, int]] = set()
+        self.hub_pos_map = {}
+        self.grid_block = set()
         self._map_contour()
         self._place_hubs(frame)
         self._place_links(frame)
@@ -121,13 +120,15 @@ class Gui:
         hub_lines = [
             "  __  ".center(self.HUB_WIDTH),
             ' |""| '.center(self.HUB_WIDTH),
-            "''''''".center(self.HUB_WIDTH)
+            "''''''".center(self.HUB_WIDTH),
         ]
 
         for hub in self.all_hubs:
             x, y = hub.coords
             grid_x = (x - self.min_x) * self.HUB_WIDTH + self.MARGIN
-            grid_y = (y - self.min_y) * (self.HUB_HEIGHT + self.METADATA_HEIGHT) + self.MARGIN
+            grid_y = (y - self.min_y) * (
+                self.HUB_HEIGHT + self.METADATA_HEIGHT
+            ) + self.MARGIN
 
             self.hub_pos_map[hub] = (grid_x, grid_y)
 
@@ -152,13 +153,17 @@ class Gui:
                 meta_lines = [
                     hub.name.center(self.HUB_WIDTH),
                     zone.center(self.HUB_WIDTH),
-                    bay.center(self.HUB_WIDTH)
+                    bay.center(self.HUB_WIDTH),
                 ]
             else:
-                drone_lines = [
-                    f"[{occupied[i:i+5]}]"
-                    for i in range(0, max(1, len_bay), 5)
-                ] if len_bay else []
+                drone_lines = (
+                    [
+                        f"[{occupied[i: i + 5]}]"
+                        for i in range(0, max(1, len_bay), 5)
+                    ]
+                    if len_bay
+                    else []
+                )
                 meta_lines = [hub.name.center(self.HUB_WIDTH)] + [
                     line.center(self.HUB_WIDTH) for line in drone_lines
                 ]
@@ -179,7 +184,7 @@ class Gui:
                             if not char.isspace():
                                 self.grid_block.add((col, row))
 
-    def _place_links(self, frame = 0) -> None:
+    def _place_links(self, frame: int = 0) -> None:
         """Draws the connecting lines between hubs using A* routing.
 
         Args:
@@ -188,7 +193,7 @@ class Gui:
         established_links = []
         sorted_hubs = sorted(
             self.all_hubs, key=lambda h: h.coords[1], reverse=True
-            )
+        )
         for hub in sorted_hubs:
             all_dest = [link["target_hub"] for link in hub.links]
             all_dest.sort(key=lambda p: p.coords[1])
@@ -201,10 +206,10 @@ class Gui:
                 established_links.append(pair)
 
                 for link in hub.links:
-                    if link['target_hub'] == dest:
-                        max_connections = link['max']
+                    if link["target_hub"] == dest:
+                        max_connections = link["max"]
                         incoming = sum(
-                            [link['incoming_drones'], link['leaving_drones']]
+                            [link["incoming_drones"], link["leaving_drones"]]
                         )
                         info = f"{incoming}/{max_connections}"
 
@@ -239,16 +244,14 @@ class Gui:
                     self.link_paths_cache[pair] = line
                 else:
                     line = self.link_paths_cache[pair]
-                    
+
                 self._fill_line(line, info, frame)
                 self.grid_block.add((x1, y1))
                 self.grid_block.add((x2, y2))
 
     def _find_line(
-            self,
-            x1: int, y1: int,
-            x2: int, y2: int
-            ) -> List[Tuple[int, int]]:
+        self, x1: int, y1: int, x2: int, y2: int
+    ) -> List[Tuple[int, int]]:
         """Finds an obstacle-free path using the A* search algorithm.
 
         Args:
@@ -263,7 +266,7 @@ class Gui:
         tie_breaker = 0
         # Cola: (f_score, giros, orden, cx, cy, dir_x, dir_y, camino)
         queue = [(0, 0, tie_breaker, x1, y1, 0, 0, [(x1, y1)])]
-        best_costs = {}
+        best_costs: Dict[Tuple, Tuple] = {}
 
         while queue:
             f_score, turns, _, cx, cy, c_dx, c_dy, path = heapq.heappop(queue)
@@ -280,21 +283,29 @@ class Gui:
             # dirección que más nos acerque al objetivo
             moves = []
             if abs_dx >= abs_dy:
-                if target_dx != 0: moves.append((cx + target_dx, cy))
-                if target_dy != 0: moves.append((cx, cy + target_dy))
+                if target_dx != 0:
+                    moves.append((cx + target_dx, cy))
+                if target_dy != 0:
+                    moves.append((cx, cy + target_dy))
                 if target_dy == 0:
                     # Intentar rodear si estamos alineados en Y
                     moves.extend([(cx, cy + 1), (cx, cy - 1)])
-                if target_dx != 0: moves.append((cx - target_dx, cy))
-                if target_dy != 0: moves.append((cx, cy - target_dy))
+                if target_dx != 0:
+                    moves.append((cx - target_dx, cy))
+                if target_dy != 0:
+                    moves.append((cx, cy - target_dy))
             else:
-                if target_dy != 0: moves.append((cx, cy + target_dy))
-                if target_dx != 0: moves.append((cx + target_dx, cy))
+                if target_dy != 0:
+                    moves.append((cx, cy + target_dy))
+                if target_dx != 0:
+                    moves.append((cx + target_dx, cy))
                 if target_dx == 0:
                     # Intentar rodear si estamos alineados en X
                     moves.extend([(cx + 1, cy), (cx - 1, cy)])
-                if target_dy != 0: moves.append((cx, cy - target_dy))
-                if target_dx != 0: moves.append((cx - target_dx, cy))
+                if target_dy != 0:
+                    moves.append((cx, cy - target_dy))
+                if target_dx != 0:
+                    moves.append((cx - target_dx, cy))
 
             # Eliminar duplicados manteniendo el orden
             unique_moves = []
@@ -333,17 +344,23 @@ class Gui:
                             new_len = len(path)
                             # Sumar un giro si cambiamos la dirección
                             # (ignoramos el paso inicial donde dir es 0,0)
-                            is_turn = 1 if (
-                                (c_dx, c_dy) != (0, 0)
-                                and (c_dx, c_dy) != (n_dx, n_dy)
-                            ) else 0
+                            is_turn = (
+                                1
+                                if (
+                                    (c_dx, c_dy) != (0, 0)
+                                    and (c_dx, c_dy) != (n_dx, n_dy)
+                                )
+                                else 0
+                            )
                             new_turns = turns + is_turn
 
                             state_key = (nx, ny, n_dx, n_dy)
 
                             # Comprobamos si hemos encontrado una ruta
                             # mejor hacia este estado
-                            if state_key not in best_costs or best_costs[state_key] > (new_len, new_turns):
+                            if state_key not in best_costs or best_costs[
+                                state_key
+                            ] > (new_len, new_turns):
                                 best_costs[state_key] = (new_len, new_turns)
 
                                 # Heurística: Distancia de Manhattan
@@ -353,13 +370,23 @@ class Gui:
 
                                 heapq.heappush(
                                     queue,
-                                    (f, new_turns, tie_breaker, nx, ny,
-                                     n_dx, n_dy, path + [(nx, ny)])
+                                    (
+                                        f,
+                                        new_turns,
+                                        tie_breaker,
+                                        nx,
+                                        ny,
+                                        n_dx,
+                                        n_dy,
+                                        path + [(nx, ny)],
+                                    ),
                                 )
 
-        return [] # Retorna vacío si no hay camino posible
+        return []  # Retorna vacío si no hay camino posible
 
-    def _fill_line(self, line: List[Tuple[int, int]], info: str = None, frame: int = 0) -> None:
+    def _fill_line(
+        self, line: List[Tuple[int, int]], info: Optional[str], frame: int = 0
+    ) -> None:
         """Draws the path trajectory characters on the grid.
 
         Args:
@@ -370,9 +397,9 @@ class Gui:
         # Iteramos desde el segundo elemento hasta el penúltimo para
         # evitar desbordamientos
         for i in range(1, len(line) - 1):
-            px, py = line[i - 1] # Punto anterior
-            dx, dy = line[i]     # Punto actual
-            nx, ny = line[i + 1] # Punto siguiente
+            px, py = line[i - 1]  # Punto anterior
+            dx, dy = line[i]  # Punto actual
+            nx, ny = line[i + 1]  # Punto siguiente
 
             # Detectamos en qué direcciones están los dos puntos adyacentes
             left = (px < dx) or (nx < dx)
@@ -394,7 +421,7 @@ class Gui:
             elif right and down:
                 char = "┌"
             else:
-                continue # Por si acaso se cruzan o hay solapamiento inesperado
+                continue
 
             # Si la celda está vacía, dibujamos el carácter de nuestra ruta.
             # Si ya hay un carácter (estamos cruzando otra línea), no lo
@@ -406,9 +433,9 @@ class Gui:
                 self.grid[dy][dx]["color"] = self.PALETTE["line"]
 
             if i == len(line) // 2:
-                self._place_link_info(dx, dy, info, frame)
+                self._place_link_info(dx, dy, str(info), frame)
 
-    def _place_drone(self, x: int, y: int, frame: int = 0) -> str:
+    def _place_drone(self, x: int, y: int, frame: int = 0) -> None:
         """Places drone ASCII representation on the grid.
 
         Args:
@@ -418,7 +445,7 @@ class Gui:
         """
         drone1 = "+♦+"
         drone2 = "✕♦✕"
-        
+
         selected = drone1 if frame % 2 == 0 else drone2
 
         for c in range(len(selected)):
@@ -426,7 +453,8 @@ class Gui:
             self.grid[y][x + c]["color"] = self.PALETTE["drone_color"]
 
     def _place_link_info(
-            self, x: int, y: int, info: str, frame: int = 0) -> None:
+        self, x: int, y: int, info: str, frame: int = 0
+    ) -> None:
         """Anchors traffic capacity metrics text on the route.
 
         Args:
@@ -441,22 +469,21 @@ class Gui:
             if 0 <= x_pos <= self.col and 0 <= y <= self.row:
                 self.grid[y][x + i - mid]["char"] = char
                 self.grid[y][x + i - mid]["color"] = None
-        
+
         if not info.startswith("0"):
             off = y - 1
             iterations = 0
             while iterations <= 5:
                 iterations += 1
-                place_ok = (
-                    False if self.grid[off][x - 1]["char"].isdigit()
-                    else True
-                )
+                char_at_pos = self.grid[off][x - 1]["char"]
+                place_ok = char_at_pos is None or not char_at_pos.isdigit()
+
                 if place_ok:
                     self._place_drone(x - 1, off, frame)
                     break
                 off -= 1
 
-    def _get_colored_char(self, c: str, color: str | None) -> str:
+    def _get_colored_char(self, c: Optional[str], color: Optional[str]) -> str:
         """Applies terminal color codes to a given character.
 
         Args:
@@ -466,6 +493,8 @@ class Gui:
         Returns:
             str: Formatted string with color codes.
         """
+        if c is None:
+            c = " "
         if not color or color == "rainbow":
             return c
 
@@ -485,18 +514,20 @@ class Gui:
             return f"{color_code}{c}{self.term.normal}"
         return c
 
-    def print_grid(self, grid: List[List[Dict[str, str]]]) -> None:
+    def print_grid(self, grid: List[List[Dict[str, Optional[str]]]]) -> None:
         """Renders the entire UI grid to the terminal.
 
         Args:
             grid (List[List[Dict[str, str]]]): The layout matrix to print.
         """
         for row in grid:
-            print("".join(
-                self._get_colored_char(c["char"], c["color"]) for c in row
-            ))
+            print(
+                "".join(
+                    self._get_colored_char(c["char"], c["color"]) for c in row
+                )
+            )
 
-    def _place_map_name(self, map_name: str) -> str:
+    def _place_map_name(self, map_name: str) -> None:
         """Prints the formatted map title banner.
 
         Args:
@@ -504,18 +535,24 @@ class Gui:
         """
         col = self.col if self.col < UX_MAX else UX_STD
         print(
-            "┌" + "─" * (col - 2) + "┐\n" +
-            "│" + map_name.upper().center(col - 2) + "│\n"
+            "┌"
+            + "─" * (col - 2)
+            + "┐\n"
+            + "│"
+            + map_name.upper().center(col - 2)
+            + "│\n"
             "└" + "─" * (col - 2) + "┘"
-            )
+        )
 
-    def _text_pannel(self,
-                    drones_left: int,
-                    turn_num: int,
-                    col_left: List[str],
-                    col_right: List[str],
-                    map_name: str,
-                    text_margin: int = 6) -> None:
+    def _text_pannel(
+        self,
+        drones_left: int,
+        turn_num: int,
+        col_left: List[str],
+        col_right: List[str],
+        map_name: str,
+        text_margin: int = 6,
+    ) -> None:
         """Renders information panels with simulation status and logs.
 
         Args:
@@ -529,7 +566,7 @@ class Gui:
         col = self.col if self.col < UX_MAX else UX_STD
         sub_size = col // 2 - (text_margin // 2)
         title = " STATUS ".center(col, "=")
-        info_drones = f"Drones left: {len(drones_left):03d}".center(col)
+        info_drones = f"Drones left: {drones_left:03d}".center(col)
         info_turns = f"Total turns: {turn_num:03d}".center(col)
         bottom = "".center(col, "=")
 
@@ -537,32 +574,44 @@ class Gui:
             sub1: str, sub2: str, size: int, margin: int
         ) -> str:
             return (
-                "┌" + "─" * (size - 2) + "┐" +
-                " " * margin +
-                "┌" + "─" * (size - 2) + "┐\n" +
-                "│" + sub1.center(size - 2) + "│" +
-                " " * margin +
-                "│" + sub2.center(size - 2) + "│\n" +
-                "└" + "─" * (size - 2) + "┘" +
-                " " * margin +
-                "└" + "─" * (size - 2) + "┘\n"
-                )
+                "┌"
+                + "─" * (size - 2)
+                + "┐"
+                + " " * margin
+                + "┌"
+                + "─" * (size - 2)
+                + "┐\n"
+                + "│"
+                + sub1.center(size - 2)
+                + "│"
+                + " " * margin
+                + "│"
+                + sub2.center(size - 2)
+                + "│\n"
+                + "└"
+                + "─" * (size - 2)
+                + "┘"
+                + " " * margin
+                + "└"
+                + "─" * (size - 2)
+                + "┘\n"
+            )
 
-        subtitles = _place_subtitle("DRONE LOG", "TURN LOG", sub_size, text_margin)
+        subtitles = _place_subtitle(
+            "DRONE LOG", "TURN LOG", sub_size, text_margin
+        )
 
         print("\n".join([title, info_drones, info_turns, bottom, subtitles]))
-
 
         max_lines = 10
         row = max_lines
         max_char_line = col // 2 - (text_margin // 2)
-        
+
         col_left = slice_str(col_left, max_char_line, max_lines)
         col_right = slice_str(col_right, max_char_line, max_lines)
 
-        grid = [
-            [{"char": " ", "color": self.PALETTE["line"]}
-             for _ in range(col)]
+        grid: List[List[Dict[str, Optional[str]]]] = [
+            [{"char": " ", "color": self.PALETTE["line"]} for _ in range(col)]
             for _ in range(row)
         ]
 
@@ -614,10 +663,21 @@ class Gui:
 
         title = " SUCCESS! ".center(col, "=")
         pannel = (
-            f"Total path cost       : {total_cost:03d}    Min turns : {min_turns:03d}".center(self.col, " ") + "\n" +
-            f"Drones moved per turn : {int(drones_per_turn):02d}%    Max turns : {max_turns:03d}".center(self.col, " ") + "\n" +
-            f"Turns per drone       : {int(avg_drone):03d}    Winner    : {winner_drone.rjust(3, ' ')}".center(self.col, " ")
+            f"Total path cost       : {total_cost:03d}    "
+            f"Min turns : {min_turns:03d}".center(
+                self.col, " "
+            )
+            + "\n"
+            + f"Drones moved per turn : {int(drones_per_turn):02d}%    "
+            f"Max turns : {max_turns:03d}".center(
+                self.col, " "
+            )
+            + "\n"
+            + f"Turns per drone       : {int(avg_drone):03d}    "
+            f"Winner    : {winner_drone.rjust(3, ' ')}".center(
+                self.col, " "
+            )
         )
-        
+
         bottom = "".center(col, "=")
         print("\n" + "\n".join([title, pannel, bottom]))

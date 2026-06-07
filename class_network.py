@@ -5,26 +5,24 @@ from enum import Enum
 
 
 class Zone(Enum):
-
-    NORMAL = 'normal'
-    BLOCKED = 'blocked'
-    RESTRICTED = 'restricted'
-    PRIORITY = 'priority'
+    NORMAL = "normal"
+    BLOCKED = "blocked"
+    RESTRICTED = "restricted"
+    PRIORITY = "priority"
 
 
 class DroneStatus(Enum):
-    
-    STANDBY = 'standby'
-    FLYING = 'flying'
-    RESTRICTED_FLIGHT = 'restricted_flight'
-    ARRIVED = 'arrived'
-    DELIVERED = 'delivered'
+    STANDBY = "standby"
+    FLYING = "flying"
+    RESTRICTED_FLIGHT = "restricted_flight"
+    ARRIVED = "arrived"
+    DELIVERED = "delivered"
+
 
 class HubType(Enum):
-
-    START = 'start_hub'
-    HUB = 'hub'
-    END = 'end_hub'
+    START = "start_hub"
+    HUB = "hub"
+    END = "end_hub"
 
 
 class Hub(BaseModel):
@@ -33,11 +31,11 @@ class Hub(BaseModel):
     hub_type: HubType
     name: str = Field(pattern=r"^[^- ]*$")
     coords: Tuple[int, int] = Field(default_factory=tuple)
-    color: Optional[str] = Field(default=None, pattern=r"^[^ ]*$")
-    max_drones: Optional[int] = Field(default=1, ge=1)
-    zone: Optional[Zone] = Zone.NORMAL
-    links: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
-    drone_bay: Optional[List['Drone']] = Field(default_factory=list)
+    color: str = Field(default=None, pattern=r"^[^ ]*$")
+    max_drones: int = Field(default=1, ge=1)
+    zone: Zone = Field(default=Zone.NORMAL)
+    links: List[Dict[str, Any]] = Field(default_factory=list)
+    drone_bay: List["Drone"] = Field(default_factory=list)
 
     def __eq__(self, other):
         if not isinstance(other, Hub):
@@ -55,33 +53,42 @@ class Path:
         id (Union[int, str]): A logical identifier for routing.
         hubs_on_route (List[Hub]): Sequence of hubs in this Path.
     """
+
     def __init__(self, id: Union[int, str], hubs_on_route: List[Hub]) -> None:
         if isinstance(id, str):
             self.id = id
         if isinstance(id, int):
             self.id = f"route_{id:03d}"
         self.hubs_on_route = hubs_on_route
-    
-    def _path_status(self,
-                      current_hub: Hub) -> None:
+
+    def _path_status(self, current_hub: Optional[Hub]) -> None:
         """Updates path variables based on the active drone position.
 
         Args:
             current_hub (Hub): The current geographic placement.
         """
+        if current_hub is None:
+            return
+
         hub_index = self.hubs_on_route.index(current_hub)
         self.hubs_on_route = self.hubs_on_route[hub_index:]
         self.next_hub = self.hubs_on_route[1]
-        self.turns_to_finish = (int(
-            len([hub for hub in self.hubs_on_route]) +
-            len([hub for hub in self.hubs_on_route if
-                 hub.zone == Zone.RESTRICTED]) - 1)
+        self.turns_to_finish = int(
+            len([hub for hub in self.hubs_on_route])
+            + len(
+                [
+                    hub
+                    for hub in self.hubs_on_route
+                    if hub.zone == Zone.RESTRICTED
+                ]
+            )
+            - 1
         )
         self.priority_next = (
             True if self.next_hub.zone == Zone.PRIORITY else False
         )
         self.available_space, self.available_links = self._is_hub_accessible()
-    
+
     def _is_hub_accessible(self) -> Tuple[bool, bool]:
         """Checks space and link availability of the next destination.
 
@@ -96,9 +103,11 @@ class Path:
 
         for link in dest.links:
             total_incoming += link["incoming_drones"]
-            if link['target_hub'] == origin:
-                if (link['max'] > link['incoming_drones'] +
-                        link['leaving_drones']):
+            if link["target_hub"] == origin:
+                if (
+                    link["max"]
+                    > link["incoming_drones"] + link["leaving_drones"]
+                ):
                     available_links = True
 
         free_space = dest.max_drones - len(dest.drone_bay)
@@ -106,7 +115,7 @@ class Path:
             available_space = True
 
         return (available_space, available_links)
-    
+
     def _block_priority_traps() -> None:
         """TODO: Detects and locks dead-end priority traps."""
         ...
@@ -123,10 +132,10 @@ class Path:
         if not isinstance(other, Path):
             return False
         return (
-            self.id == other.id and
-            self.turns_to_finish == other.turns_to_finish
+            self.id == other.id
+            and self.turns_to_finish == other.turns_to_finish
         )
-    
+
     def __hash__(self):
         """Generates a unique hash key mapped to ID and route length.
 
@@ -138,12 +147,13 @@ class Path:
 
 class Drone(BaseModel):
     """Logical entity encapsulating drone navigation and properties."""
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: str
     status: DroneStatus
-    remaining_turns: int = Field(default=0)
-    current_path: Path = Field(default=None)
+    remaining_turns: int = Field(default=0)  # type: ignore
+    current_path: Optional[Path] = Field(default=None)
     current_hub: Optional[Hub] = Field(default=None)
     origin: Optional[Hub] = Field(default=None)
     destination: Optional[Hub] = Field(default=None)
@@ -167,27 +177,33 @@ class Drone(BaseModel):
         self.current_hub = self.destination
         self.destination = None
         self.status = (
-            DroneStatus.DELIVERED if self.current_hub.hub_type == HubType.END
+            DroneStatus.DELIVERED
+            if self.current_hub.hub_type == HubType.END
             else DroneStatus.ARRIVED
-        )        
+        )
         self.visited_hubs.append(self.current_hub)
 
         if self.current_path and self.status == DroneStatus.ARRIVED:
-            self.current_path._path_status(self.current_hub)
+            if self.current_hub is None:
+                raise ValueError(
+                    "current_hub no puede ser None al llamar a _path_status."
+                    )
+            self.current_path._path_status(self.current_hub)  # type: ignore
             self.remaining_turns = self.current_path.turns_to_finish
 
-    
+
 class Network(BaseModel):
     """Validates models to ensure map topology structural integrity."""
+
     map: str
     nb_drones: int = Field(ge=1)
     start_hub: Hub
     hub: List[Hub] = Field(default_factory=list)
     end_hub: Hub
     connections: List[Dict]
-    
-    @model_validator(mode='after')
-    def validator(self) -> 'Network':
+
+    @model_validator(mode="after")
+    def validator(self) -> "Network":
         """Checks the graph for duplicates or invalid links before simulation.
 
         Returns:
@@ -199,37 +215,35 @@ class Network(BaseModel):
         all_hubs = self.hub + [self.start_hub, self.end_hub]
         unique_names = {hub.name for hub in all_hubs}
         if len(self.hub) > len(unique_names):
-            raise ValueError(ERROR['parser']['duplicate_hub_names'])
+            raise ValueError(ERROR["parser"]["duplicate_hub_names"])
 
         unique_coords = {hub.coords for hub in self.hub}
         if len(self.hub) > len(unique_coords):
-            raise ValueError(ERROR['parser']['duplicate_hub_coords'])
+            raise ValueError(ERROR["parser"]["duplicate_hub_coords"])
 
         unique_links = set()
         hub_dict = {hub.name: hub for hub in self.hub}
         hub_dict[self.start_hub.name] = self.start_hub
         hub_dict[self.end_hub.name] = self.end_hub
         for link in self.connections:
-            current_link = tuple(sorted(
-                (link["point_a"], link["point_b"])
-                ))
+            current_link = tuple(sorted((link["point_a"], link["point_b"])))
             if current_link in unique_links:
-                raise ValueError(ERROR['parser']['duplicate_link'])
+                raise ValueError(ERROR["parser"]["duplicate_link"])
             unique_links.add(current_link)
 
             if link["point_a"] == link["point_b"]:
                 raise ValueError(
-                    ERROR['parser']['self_link'].format(
-                        point_a=link["point_a"],
-                        point_b=link["point_b"])
-                        )
+                    ERROR["parser"]["self_link"].format(
+                        point_a=link["point_a"], point_b=link["point_b"]
+                    )
+                )
 
             for point in [link["point_a"], link["point_b"]]:
                 if point not in unique_names:
-                    raise ValueError(ERROR['parser']['missing_hub'].format(
-                        point=point
-                        ))
-            
+                    raise ValueError(
+                        ERROR["parser"]["missing_hub"].format(point=point)
+                    )
+
             hub_a = hub_dict.get(link["point_a"])
             hub_b = hub_dict.get(link["point_b"])
 
@@ -239,17 +253,21 @@ class Network(BaseModel):
 
             if hub_a and hub_b:
                 hub_a.links.append(
-                    {'target_hub': hub_b,
-                     'max': max_link_capacity,
-                     'incoming_drones': 0,
-                     'leaving_drones': 0}
-                    )
+                    {
+                        "target_hub": hub_b,
+                        "max": max_link_capacity,
+                        "incoming_drones": 0,
+                        "leaving_drones": 0,
+                    }
+                )
                 hub_b.links.append(
-                    {'target_hub': hub_a,
-                     'max': max_link_capacity,
-                     'incoming_drones': 0,
-                     'leaving_drones': 0}
-                    )
+                    {
+                        "target_hub": hub_a,
+                        "max": max_link_capacity,
+                        "incoming_drones": 0,
+                        "leaving_drones": 0,
+                    }
+                )
 
             for drone in self.start_hub.drone_bay:
                 drone.current_hub = self.start_hub

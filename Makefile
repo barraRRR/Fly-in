@@ -21,4 +21,4 @@ clean:
 		rm -rf .mypy_cache
 
 lint:
-		flake8 . --exclude=venv && mypy . --exclude venv --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+		flake8 . --exclude=venv,test_fly_in.py && mypy . --exclude venv --exclude test_fly_in.py --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs

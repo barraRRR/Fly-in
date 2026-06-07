@@ -6,7 +6,6 @@ from utils import clear, menu, wait_for_enter, select_map_file
 from utils import welcome, goodbye, DELAY, STATUS, ERROR, UX_MAX, UX_STD, UX
 from typing import List
 from time import sleep
-import sys
 import utils
 
 
@@ -19,8 +18,9 @@ def main() -> None:
                 map_file = select_map_file()
                 if map_file is None:
                     goodbye()
-                map_name = map_file.split("/")[-1].removesuffix(".txt")
-                map = MapParser(map_file)
+                map_path = str(map_file)
+                map_name = map_path.split("/")[-1].removesuffix(".txt")
+                map = MapParser(map_path)
                 net = Network(**map.data)
                 sim = Simulator(net)
                 gui = Gui(net)
@@ -29,7 +29,7 @@ def main() -> None:
 
             except ValueError:
                 print(ERROR["parser"]["parsing_error"])
-                wait_for_enter()
+                wait_for_enter(None)
                 continue
 
         manual = False
@@ -49,16 +49,17 @@ def main() -> None:
 
         turn_list: List[str] = []
         drone_status: List[str] = []
-        col_left = []
-        col_right = []
+        col_left: List[str] = []
+        col_right: List[str] = []
         frame = 0
 
         def refresh(
-                gui: Gui,
-                sim: Simulator,
-                col_left: List[str],
-                col_right: List[str],
-                map_name: str) -> None:
+            gui: Gui,
+            sim: Simulator,
+            col_left: List[str],
+            col_right: List[str],
+            map_name: str,
+        ) -> None:
             """Refreshes the GUI elements safely during simulation runtime.
 
             Args:
@@ -73,15 +74,18 @@ def main() -> None:
             if gui.col < UX_MAX:
                 gui.print_grid(gui.grid)
 
+            sim_drones_left = len(sim.drones_left)
+            sim_turn_num = int(sim.metrics["current_turn"])
             gui._text_pannel(
-                drones_left=sim.drones_left,
+                drones_left=sim_drones_left,
                 col_left=col_left,
                 col_right=col_right,
                 map_name=map_name,
-                turn_num=sim.metrics["current_turn"])
+                turn_num=sim_turn_num
+            )
 
         try:
-            while sim.drones_left:                
+            while sim.drones_left:
                 refresh(gui, sim, col_left, col_right, map_name)
 
                 for event in sim.simulate_turn():
@@ -90,9 +94,11 @@ def main() -> None:
                         drone_status.insert(0, event["msg"])
                     elif event["type"] == "end_turn":
                         drone_status.insert(
-                            0, STATUS["end_of_turn"].format(
+                            0,
+                            STATUS["end_of_turn"].format(
                                 turn_num=sim.metrics["current_turn"]
-                                ))
+                            ),
+                        )
                         turn_list.insert(0, event["msg"])
 
                     gui.update(frame)
@@ -102,12 +108,14 @@ def main() -> None:
                     refresh(gui, sim, col_left, col_right, map_name)
                     sleep(utils.PACE)
 
-                    if (manual and 
-                        event["type"] == "end_turn"
-                        and sim.drones_left):
+                    if (
+                        manual
+                        and event["type"] == "end_turn"
+                        and sim.drones_left
+                    ):
                         print()
-                        wait_for_enter()
-            
+                        wait_for_enter(None)
+
             sim._get_metrics()
             gui._metrics_panel(sim.metrics)
 
@@ -151,6 +159,7 @@ def confirm_map(gui: Gui, map_name: str) -> bool:
         return False
     else:
         goodbye()
+    return False
 
 
 def configure_ux(gui: Gui) -> int:
@@ -171,8 +180,9 @@ def configure_ux(gui: Gui) -> int:
             UX["mode_manual"],
             UX["mode_auto"],
             UX["mode_fast"],
-            UX["mode_direct"]
-            ])
+            UX["mode_direct"],
+        ]
+    )
     return idx
 
 
