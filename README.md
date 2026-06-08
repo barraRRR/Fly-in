@@ -3,6 +3,7 @@
 # Fly-in
 
 ## Description
+<img width="1920" height="1080" alt="fly_in_kv" src="https://github.com/user-attachments/assets/53cef7aa-280d-4873-a52f-51e05582cfa6" />
 
 **fly-in** is a dynamic, terminal-based drone network simulation application. The project combines graph theory, pathfinding algorithms, and dynamic resource allocation to simulate a swarm of drones navigating through a complex network of hubs and constrained links.
 
@@ -29,6 +30,7 @@ The primary goal is to optimize the routing of a given number of drones from a s
    ```
 
 ### Execution
+<img width="800" height="611" alt="fly_in_demo" src="https://github.com/user-attachments/assets/c276a892-8443-4512-86c9-7e64b097ee5d" />
 
 Run the main application using the Makefile:
 ```bash
