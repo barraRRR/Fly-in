@@ -621,7 +621,7 @@ class Gui:
 
             if "[SUCCESS]" in line:
                 color_code = self.PALETTE["pale_green"]
-            elif "[END OF TURN" in line:
+            elif "[TURN" in line:
                 color_code = self.PALETTE["drone_color"]
             elif "[WARNING]" in line:
                 color_code = self.PALETTE["warning"]

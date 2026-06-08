@@ -1,6 +1,6 @@
 {
     "ux": {
-        "loading_ok": "OK",
+        "ok": "OK",
         "loading_fail": "FAIL",
         "permission_denied": "❌ Permission denied",
         "no_files_found": "❌ No folders or .txt files found",
@@ -40,10 +40,20 @@
     },
     "warning": {
         "simulator": {
+            "dynamic_drone_warning": "{drone_id} [WARNING]: {message}",
             "hub_full": "Hubs on route are at maximum capacity",
             "no_links": "No available links from current hub",
             "path_blocked": "Path is blocked due to capacity or connection constraints"
         }
+    },
+    "path": {
+        "empty_route": "Path cannot be empty when calculating its status.",
+        "first_hub_none": "The first hub in the path cannot be None."
+    },
+    "drone": {
+        "take_off_none_hub": "Drone cannot take off from a None hub.",
+        "take_off_no_destination": "Drone cannot take off without a destination.",
+        "current_hub_none_path_status": "current_hub cannot be None when calling _path_status."
     },
     "error": {
         "parser": {

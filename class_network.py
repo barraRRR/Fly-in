@@ -30,19 +30,19 @@ class Hub(BaseModel):
     """Represents a Hub node with coordinates and logic variables."""
     hub_type: HubType
     name: str = Field(pattern=r"^[^- ]*$")
-    coords: Tuple[int, int] = Field(default_factory=tuple)
-    color: str = Field(default=None, pattern=r"^[^ ]*$")
+    coords: Tuple[int, int]
+    color: Optional[str] = Field(default=None, pattern=r"^[^ ]*$")
     max_drones: int = Field(default=1, ge=1)
     zone: Zone = Field(default=Zone.NORMAL)
     links: List[Dict[str, Any]] = Field(default_factory=list)
     drone_bay: List["Drone"] = Field(default_factory=list)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Hub):
             return False
         return self.name == other.name
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.name)
 
 
@@ -116,11 +116,7 @@ class Path:
 
         return (available_space, available_links)
 
-    def _block_priority_traps() -> None:
-        """TODO: Detects and locks dead-end priority traps."""
-        ...
-
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         """Evaluates path equality based on ID and route length.
 
         Args:
@@ -136,7 +132,7 @@ class Path:
             and self.turns_to_finish == other.turns_to_finish
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Generates a unique hash key mapped to ID and route length.
 
         Returns:
@@ -152,7 +148,7 @@ class Drone(BaseModel):
 
     id: str
     status: DroneStatus
-    remaining_turns: int = Field(default=0)  # type: ignore
+    remaining_turns: int = Field(default=0)
     current_path: Optional[Path] = Field(default=None)
     current_hub: Optional[Hub] = Field(default=None)
     origin: Optional[Hub] = Field(default=None)
@@ -162,8 +158,12 @@ class Drone(BaseModel):
 
     def _take_off(self) -> None:
         """Initiates flight by removing drone from bay and updating status."""
+        if self.current_hub is None:
+            raise ValueError(ERROR["drone"]["take_off_none_hub"])
         self.current_hub.drone_bay.remove(self)
         self.current_hub = None
+        if self.destination is None:
+            raise ValueError(ERROR["drone"]["take_off_no_destination"])
         if self.destination.zone == Zone.RESTRICTED:
             self.status = DroneStatus.RESTRICTED_FLIGHT
         else:
@@ -172,6 +172,8 @@ class Drone(BaseModel):
 
     def _arrive(self) -> None:
         """Registers the drone inside the destination node."""
+        if self.destination is None:
+            raise ValueError("Drone cannot arrive to a None hub.")
         if self.destination.hub_type != HubType.END:
             self.destination.drone_bay.append(self)
         self.current_hub = self.destination
@@ -186,9 +188,9 @@ class Drone(BaseModel):
         if self.current_path and self.status == DroneStatus.ARRIVED:
             if self.current_hub is None:
                 raise ValueError(
-                    "current_hub no puede ser None al llamar a _path_status."
+                    ERROR["drone"]["current_hub_none_path_status"]
                     )
-            self.current_path._path_status(self.current_hub)  # type: ignore
+            self.current_path._path_status(self.current_hub)
             self.remaining_turns = self.current_path.turns_to_finish
 
 
@@ -249,7 +251,7 @@ class Network(BaseModel):
 
             max_link_capacity = link.get("max_link_capacity", 1)
             if max_link_capacity < 1:
-                raise ValueError
+                raise ValueError(ERROR["parser"]["invalid_max_link_capacity"])
 
             if hub_a and hub_b:
                 hub_a.links.append(

@@ -184,7 +184,7 @@ def goodbye() -> str:
     clear()
     print("\n\n")
     print(title(), end="\n" * 3)
-    print(UX["goodbye"])
+    print(UX["goodbye"], "\n")
     sys.exit(0)
 
 

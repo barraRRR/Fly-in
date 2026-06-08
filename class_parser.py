@@ -1,5 +1,6 @@
 from utils import STATUS, ERROR
-from typing import Dict
+from typing import Dict, Any
+from utils import UX
 
 
 class MapParser:
@@ -36,7 +37,7 @@ class MapParser:
             print(STATUS["parsing_map"].format(map=self.path), end="")
             raw = f.readlines()
         print(" OK")
-
+        print(UX["ok"])
         for line in raw:
             clean_line = line.strip()
             if not clean_line or clean_line.startswith("#"):
@@ -88,15 +89,15 @@ class MapParser:
             Dict: Hub title, coordinates, and configurations.
         """
         line = line.lower().strip()
-        hub_type, data = line.split(":", 1)
+        hub_type, data_raw = line.split(":", 1)
         hub_type = hub_type.strip(" :")
-        data = data.strip().split(" ")
+        data = data_raw.strip().split(" ")
         name = data[0]
 
         x = int(data[1])
         y = int(data[2])
 
-        payload = {
+        payload: Dict[str, Any] = {
             "hub_type": hub_type,
             "name": name,
             "coords": (x, y),
@@ -106,10 +107,12 @@ class MapParser:
         try:
             for chunk in data[3:]:
                 if "=" not in chunk:
-                    raise ValueError("Invalid metadata format")
-                meta, value = chunk.split("=")
+                    raise ValueError(
+                        ERROR["parser"]["invalid_metadata_format"]
+                        )
+                meta, value_raw = chunk.split("=")
                 meta = meta.strip("[]")
-                value = value.strip("[]")
+                value = value_raw.strip("[]")
                 if meta in ["color", "max_drones", "zone"]:
                     if meta == "max_drones":
                         payload[meta] = int(value)
@@ -136,20 +139,20 @@ class MapParser:
             Dict: Start and end nodes with connection capacity.
         """
         line = line.lower().strip()
-        data = line.split(":", 1)[1]
-        data = data.strip().split(" ")
+        data_raw = line.split(":", 1)[1]
+        data = data_raw.strip().split(" ")
         if "-" not in data[0]:
             raise ValueError("Invalid connection format")
 
         point_a, point_b = data[0].split("-")
-        payload = {
+        payload: Dict[str, Any] = {
             "point_a": point_a,
             "point_b": point_b,
         }
 
         try:
             if "=" not in data[1]:
-                raise ValueError("Invalid capacity format")
+                raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
             max_link_capacity = int(data[1].strip("[]").split("=")[1])
             payload["max_link_capacity"] = max_link_capacity

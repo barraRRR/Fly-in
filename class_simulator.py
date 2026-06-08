@@ -79,14 +79,10 @@ class Simulator:
             if start == self.net.end_hub:
                 path = Path(next(path_id_generator), list(current_path))
                 if not path.hubs_on_route:
-                    raise ValueError(
-                        "La ruta no puede estar vacía al calcular su estado."
-                        )
+                    raise ValueError(ERROR["path"]["empty_route"])
                 first_hub = path.hubs_on_route[0]
                 if first_hub is None:
-                    raise ValueError(
-                        "El primer hub en la ruta no puede ser None."
-                        )
+                    raise ValueError(ERROR["path"]["first_hub_none"])
                 path._path_status(first_hub)
                 all_paths.append(path)
             else:
@@ -247,7 +243,10 @@ class Simulator:
             ) as e:
                 yield {
                     "type": "drone_status",
-                    "msg": f"{lead_drone.id} [WARNING]: {str(e)}",
+                    "msg": (
+                        WARNING["simulator"]["dynamic_drone_warning"].format(
+                            drone_id=lead_drone.id, message=str(e))
+                        )
                 }
                 continue
 
