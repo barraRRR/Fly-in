@@ -9,6 +9,6 @@ import_hub_data.py
 hub_data.json
 en.subject.1.4.pdf
 en.subject.pdf
-output_file.pdf
+output_file.txt
 test_fly_in.py
 assets
