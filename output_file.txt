@@ -648,3 +648,19 @@ D6-impossible_goal D7-final_torture5 D8-final_torture4 D9-final_torture3
 D7-impossible_goal D8-final_torture5 D9-final_torture4
 D8-impossible_goal D9-final_torture5
 D9-impossible_goal
+D1-gate3 D10-gate2 D11-gate1
+D1-waiting_area3 D10-gate3 D12-gate2 D11-waiting_area1
+D1-convergence D10-waiting_area3 D11-priority_bypass1 D12-gate3 D2-gate2 D3-gate1
+D1-final_bottleneck D10-convergence D11-priority_bypass2 D12-waiting_area3 D2-gate3 D4-gate2 D3-waiting_area1
+D1-goal D10-final_bottleneck D11-convergence D12-convergence D2-waiting_area3 D3-priority_bypass1 D4-gate3 D5-gate2 D6-gate1
+D10-goal D11-final_bottleneck D12-final_bottleneck D2-convergence D3-priority_bypass2 D4-waiting_area3 D5-gate3 D7-gate2 D6-waiting_area1
+D11-goal D2-final_bottleneck D3-convergence D4-convergence D5-waiting_area3 D6-priority_bypass1 D7-gate3 D8-gate2 D9-gate1
+D12-goal D3-final_bottleneck D4-final_bottleneck D5-convergence D6-priority_bypass2 D7-waiting_area3 D8-gate3 D9-waiting_area1
+D2-goal D5-final_bottleneck D6-convergence D7-convergence D8-waiting_area3 D9-priority_bypass1
+D3-goal D6-final_bottleneck D8-convergence D9-priority_bypass2
+D4-goal D7-final_bottleneck D9-convergence
+D5-goal D8-final_bottleneck
+D6-goal D9-final_bottleneck
+D7-goal
+D8-goal
+D9-goal

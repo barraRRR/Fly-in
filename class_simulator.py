@@ -1,4 +1,5 @@
-from class_network import Network, Hub, Path, Drone, DroneStatus, Zone
+from class_network import Network, Hub, Path, Drone
+from class_network import DroneStatus, Zone, HubType
 from utils import ERROR, WARNING, STATUS, path_id_generator
 import utils
 from typing import List, Dict, Set, Generator, Any, Optional
@@ -265,27 +266,28 @@ class Simulator:
                 self.drones_in_motion.remove(drone)
                 self._set_link(drone.origin, drone.current_hub, False)
 
-                if drone.status == DroneStatus.DELIVERED:
-                    yield {
-                        "type": "drone_status",
-                        "msg": STATUS["drone_delivered"].format(
-                            drone_id=drone.id
-                        ),
-                    }
-                    self.drones_left.remove(drone)
-                    self.delivered_drones.append(drone)
+                if drone.current_hub:
+                    if drone.current_hub.hub_type == HubType.END:
+                        yield {
+                            "type": "drone_status",
+                            "msg": STATUS["drone_delivered"].format(
+                                drone_id=drone.id
+                            ),
+                        }
+                        self.drones_left.remove(drone)
+                        self.delivered_drones.append(drone)
 
-                else:
-                    dest = (
-                        drone.current_hub.name
-                        if drone.current_hub else "Unknown"
-                    )
-                    yield {
-                        "type": "drone_status",
-                        "msg": STATUS["drone_arrived"].format(
-                            drone_id=drone.id, hub_name=dest
-                        ),
-                    }
+                    else:
+                        dest = (
+                            drone.current_hub.name
+                            if drone.current_hub else "Unknown"
+                        )
+                        yield {
+                            "type": "drone_status",
+                            "msg": STATUS["drone_arrived"].format(
+                                drone_id=drone.id, hub_name=dest
+                            ),
+                        }
 
         self.metrics["current_turn"] += 1
 

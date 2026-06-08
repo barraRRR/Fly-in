@@ -266,7 +266,7 @@ class Gui:
         tie_breaker = 0
         # Cola: (f_score, giros, orden, cx, cy, dir_x, dir_y, camino)
         queue = [(0, 0, tie_breaker, x1, y1, 0, 0, [(x1, y1)])]
-        best_costs: Dict[Tuple, Tuple] = {}
+        best_costs: Dict[Tuple[int, int, int, int], Tuple[int, int]] = {}
 
         while queue:
             f_score, turns, _, cx, cy, c_dx, c_dy, path = heapq.heappop(queue)

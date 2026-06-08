@@ -14,7 +14,7 @@ class MapParser:
         self.path = path
         self.data = self._parse_map()
 
-    def _parse_map(self) -> Dict:
+    def _parse_map(self) -> Dict[str, Any]:
         """Reads the map file and populates the network data dictionary.
 
         Returns:
@@ -24,7 +24,7 @@ class MapParser:
             ValueError: On structural parsing faults or invalid schema.
         """
         first_line_nb_drones = False
-        payload: Dict = {
+        payload: Dict[str, Any] = {
             "map": self.path.split("/")[-1].removesuffix(".txt"),
             "nb_drones": None,
             "start_hub": None,
@@ -79,7 +79,7 @@ class MapParser:
         return payload
 
     @staticmethod
-    def _parse_hub(line: str) -> Dict:
+    def _parse_hub(line: str) -> Dict[str, Any]:
         """Extracts hub configuration data from a text line.
 
         Args:
@@ -129,7 +129,7 @@ class MapParser:
         return payload
 
     @staticmethod
-    def _parse_connection(line: str) -> Dict:
+    def _parse_connection(line: str) -> Dict[str, Any]:
         """Extracts connection data mapping targets and capacities.
 
         Args:

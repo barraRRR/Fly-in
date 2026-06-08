@@ -1,14 +1,18 @@
-from typing import Tuple, Dict, List, Union, Optional, Generator
+from typing import Tuple, Dict, List, Union, Optional, Generator, Any
 from itertools import count
 from pathlib import Path
-from simple_term_menu import TerminalMenu
+from simple_term_menu import (  # type: ignore[import-untyped, unused-ignore]
+    TerminalMenu,
+)
 from textwrap import wrap
 import sys
 import os
 import json
 
 
-def import_texts(language: str) -> Tuple[Dict, Dict, Dict, Dict]:
+def import_texts(
+    language: str,
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """Imports application texts safely from a JSON file.
 
     Args:
@@ -206,7 +210,8 @@ def slice_str(
     return new
 
 
-def offset_sequence(max_offset: Optional[int] = None) -> Generator:
+def offset_sequence(
+        max_offset: Optional[int] = None) -> Generator[int, None, None]:
     """Generates an alternating sequence (e.g., 0, 1, -1, 2, -2).
 
     Args:
