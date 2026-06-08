@@ -202,7 +202,7 @@ class Network(BaseModel):
     start_hub: Hub
     hub: List[Hub] = Field(default_factory=list)
     end_hub: Hub
-    connections: List[Dict]
+    connections: List[Dict[str, Any]]
 
     @model_validator(mode="after")
     def validator(self) -> "Network":

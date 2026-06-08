@@ -1,4 +1,4 @@
-.PHONY: install, run, debug, clean, lint
+.PHONY: install, run, debug, clean, lint, lint-strict
 
 install:
 		python3 -m venv venv
@@ -21,4 +21,7 @@ clean:
 		rm -rf .mypy_cache
 
 lint:
-		flake8 . --exclude=venv,test_fly_in.py && mypy . --exclude venv --exclude test_fly_in.py --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+		venv/bin/flake8 . --exclude=venv,test_fly_in.py && venv/bin/mypy . --exclude venv --exclude test_fly_in.py --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+
+lint-strict:
+		venv/bin/flake8 . --exclude=venv,test_fly_in.py && venv/bin/mypy . --exclude venv --exclude test_fly_in.py --strict
