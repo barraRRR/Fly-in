@@ -9,6 +9,10 @@ from time import sleep
 import utils
 
 
+__author__ = "Javier Barreiro"
+__email__ = "jbarreir@student.42madrid.com"
+
+
 def main() -> None:
     """Main execution loop handling application state and interactive flow."""
     welcome()
@@ -27,8 +31,9 @@ def main() -> None:
                 if confirm_map(gui, map_name):
                     break
 
-            except ValueError:
+            except ValueError as e:
                 print(ERROR["parser"]["parsing_error"])
+                print(f"    DETAILS: {e}")
                 wait_for_enter(None)
                 continue
 

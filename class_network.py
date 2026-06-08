@@ -216,11 +216,11 @@ class Network(BaseModel):
         """
         all_hubs = self.hub + [self.start_hub, self.end_hub]
         unique_names = {hub.name for hub in all_hubs}
-        if len(self.hub) > len(unique_names):
+        if len(all_hubs) != len(unique_names):
             raise ValueError(ERROR["parser"]["duplicate_hub_names"])
 
-        unique_coords = {hub.coords for hub in self.hub}
-        if len(self.hub) > len(unique_coords):
+        unique_coords = {hub.coords for hub in all_hubs}
+        if len(all_hubs) != len(unique_coords):
             raise ValueError(ERROR["parser"]["duplicate_hub_coords"])
 
         unique_links = set()
