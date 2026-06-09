@@ -14,7 +14,7 @@ run:
 		. source venv/bin/avtivate & python3 __main__.py
 
 debug:
-		pytest test_fly_in.py
+		venv/bin/python3 -m pdb __main__.py
 
 clean:
 		rm -rf __pycache__

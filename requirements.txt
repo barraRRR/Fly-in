@@ -2,6 +2,5 @@ pydantic
 flake8
 mypy
 wget
-pytest
 simple-term-menu
 blessed

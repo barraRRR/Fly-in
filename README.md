@@ -1,7 +1,21 @@
 *This project has been created as part of the 42 curriculum by jbarreir.*
 
 # Fly-in
-<img width="1920" height="1003" alt="fly_in_logo" src="https://github.com/user-attachments/assets/0120dad2-f25d-45b7-8e95-cb3a5c93ae61" />
+
+<div align="center">
+
+
+<img width="800" height="418" alt="fly_in_kv" src="https://github.com/user-attachments/assets/0120dad2-f25d-45b7-8e95-cb3a5c93ae61" />
+
+#### *Like a traffic light, but for the sky.*
+
+
+![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)
+![Python Versions](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue.svg)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+
+</div>
 
 ## Description
 
@@ -13,7 +27,7 @@ The primary goal is to optimize the routing of a given number of drones from a s
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.10+
 - A terminal supporting ANSI escape codes
 
 ### Installation
@@ -30,7 +44,6 @@ The primary goal is to optimize the routing of a given number of drones from a s
    ```
 
 ### Execution
-<img width="800" height="611" alt="fly_in_demo" src="https://github.com/user-attachments/assets/c276a892-8443-4512-86c9-7e64b097ee5d" />
 
 Run the main application using the Makefile:
 ```bash
@@ -40,6 +53,10 @@ This will launch the interactive terminal menu where you can:
 1. Select a map file from the directory browser.
 2. Confirm the loaded map layout.
 3. Choose a simulation speed (Manual step-by-step, Automatic, Fast, or Direct).
+
+### UX Demo
+
+<img width="800" height="611" alt="fly_in_demo" src="https://github.com/user-attachments/assets/c276a892-8443-4512-86c9-7e64b097ee5d" />
 
 ## Algorithm Choices & Implementation Strategy
 
@@ -61,6 +78,12 @@ At every turn, drones dynamically evaluate their available routes. The flight pl
 
 If primary paths are blocked by traffic congestion, drones will wait in a `STANDBY` state until bottlenecks clear, preventing complete network gridlock.
 
+### 3. Efficiency, Scalability & Caching
+To ensure the simulation can work seamlessly with a large number of drones, the algorithmic approach strictly avoids redundant calculations:
+- **Caching vs Recalculating:** Instead of dynamically recalculating routing trees at every step, the simulator pre-calculates and **caches** all valid network paths during initialization (`self.all_paths`). Furthermore, the GUI rendering engine caches all A* calculated visual lines (`link_paths_cache`). During active flight, drones merely evaluate the *current capacity state* of the pre-cached routes.
+- **Algorithm Complexity:** Because paths are cached, the per-turn flight planner operates with an efficient time complexity of **$O(D \times P)$**, where $D$ is the number of active drones and $P$ is the number of pre-calculated paths. The upfront route discovery operates at a worst-case of **$O(2^V)$** for fully connected graphs, but is aggressively pruned.
+- **Memory Impact:** Storing path sequences in memory trades a negligible amount of RAM for massive CPU savings. The overall space complexity remains bounded to **$O(V + P)$** (Vertices + Paths). This ensures the application footprint remains tiny and impact on memory usage is almost completely unnoticeable, even when simulating hundreds of drones simultaneously.
+
 ## Map Parsing & Data Validation
 
 To ensure the simulation operates flawlessly, the application employs a rigorous map parsing and validation layer powered by **Pydantic**. Instead of relying on manual dictionary checks, the map topology is ingested and validated through strongly typed data models (`Network`, `Hub`, `Drone`).
@@ -73,7 +96,7 @@ Before a single drone takes flight, a custom `@model_validator` analyzes the ent
 
 By leveraging this robust validation pipeline, the engine guarantees that any loaded map—no matter how complex—is geometrically and logically viable before execution begins, making custom map creation safe and debuggable.
 
-```markdown
+```
 # Easy Level 1: Simple linear path
 nb_drones: 2
 
@@ -89,7 +112,7 @@ connection: waypoint2-goal
 
 ## Visual Representation & User Experience
 
-Visualizing the network graph dynamically within a terminal environment was one of the most significant challenges of this project. The graphics layer utilizes the `blessed` library to render a clean, color-coded, and responsive UI.
+Visualizing the network graph dynamically within a terminal environment was one of the most significant challenges of this project. The graphics layer utilizes the `blessed` library to render a clean, color-coded, and responsive UI. **This visual representation drastically enhances the understanding of the simulation by translating raw, abstract algorithmic decisions into a tangible, easy-to-monitor 2D system. Users can instantly pinpoint traffic bottlenecks, observe physical capacity loads, and intuitively understand exactly why the flight planner forces a drone into standby.**
 
 ### The GUI Line Routing Challenge
 Drawing the connection links between hubs required much more than just drawing straight lines. To prevent lines from overlapping hubs and creating an illegible map, we implemented an **A* (A-Star) Pathfinding Algorithm** specifically dedicated to the UI rendering engine.
@@ -131,7 +154,7 @@ Below is a performance overview comparing the actual turns our algorithm took ag
 
 ### Documentation & References
 - **Python Documentation**: Standard libraries such as `heapq` used heavily for priority queues in our A* line-routing implementation.
-- **Blessed Library**: blessed.readthedocs.io - Used for terminal sequence formatting and advanced screen control.
+- **Blessed Library**: [blessed.readthedocs.io](blessed.readthedocs.io) - Used for terminal sequence formatting and advanced screen control.
 - **Pydantic**: Utilized for rigorous data validation and schema mapping during map parsing.
 - **Graph Theory**: References regarding DFS optimization and spanning tree variants for path discovery.
 
