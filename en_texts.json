@@ -22,7 +22,8 @@
         "mode_manual": "Manual (step-by-step)",
         "mode_auto": "Automatic (normal speed)",
         "mode_fast": "Fast and furious",
-        "mode_direct": "Direct to the point (no delay)"
+        "mode_direct": "Direct to the point (no delay)",
+        "simulation_ongoing": "Simulation in progress. Please wait for the results..."
     },
     "status": {
         "loading_map": "Loading map...",

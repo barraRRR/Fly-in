@@ -43,19 +43,21 @@ def main() -> None:
                 goodbye()
 
         manual = False
+        direct = False
         config = configure_ux(gui)
         if config == 0:
             utils.PACE = DELAY
             manual = True
         elif config == 1:
             utils.PACE = DELAY
-            manual = False
         elif config == 2:
             utils.PACE = utils.FAST
-            manual = False
         else:
             utils.PACE = utils.DIRECT
-            manual = False
+            direct = True
+            clear()
+            gui.col = UX_STD
+            print(UX["simulation_ongoing"])
 
         turn_list: List[str] = []
         drone_status: List[str] = []
@@ -96,7 +98,8 @@ def main() -> None:
 
         try:
             while sim.drones_left:
-                refresh(gui, sim, col_left, col_right, map_name)
+                if not direct:
+                    refresh(gui, sim, col_left, col_right, map_name)
 
                 for event in sim.simulate_turn():
                     frame += 1
@@ -111,17 +114,20 @@ def main() -> None:
                         )
                         turn_list.insert(0, event["msg"])
 
-                    gui.update(frame)
+                    if not direct:
+                        gui.update(frame)
                     col_left = drone_status
                     col_right = turn_list
 
-                    refresh(gui, sim, col_left, col_right, map_name)
+                    if not direct:
+                        refresh(gui, sim, col_left, col_right, map_name)
                     sleep(utils.PACE)
 
                     if (
                         manual
                         and event["type"] == "end_turn"
                         and sim.drones_left
+                        and not direct
                     ):
                         print()
                         wait_for_enter(None)

@@ -46,6 +46,13 @@ class Simulator:
             "total_path_cost": 0,
         }
 
+        try:
+            with open("output_file.txt", "w"):
+                pass
+
+        except FileNotFoundError:
+            pass
+
     def _find_all_paths(
         self,
         start: Optional[Hub] = None,

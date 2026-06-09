@@ -74,9 +74,6 @@ To find all possible valid paths from the `start_hub` to the `end_hub`, the simu
 
 > **💡 Time Complexity Note:** While a standard DFS traversal operates in **$O(V + E)$** (where $V$ is vertices/hubs and $E$ is edges/links), discovering *all* unique non-cyclic paths in a dense graph approaches an exponential worst-case time complexity of **$O(2^V)$**. By immediately pruning `BLOCKED` zones and utilizing efficient backtracking, the algorithm aggressively bounds the search space while maintaining a minimal linear space complexity of **$O(V)$**.
 
-> **🔍 DFS vs. BFS: Why Depth-First?**
-> While **Breadth-First Search (BFS)** explores a graph level by level (which is ideal for finding the single absolute shortest path), **Depth-First Search (DFS)** plunges as deep as possible along a single branch before backtracking. Because *Fly-in* requires the simulator to discover **all** possible valid alternative routes to handle dynamic traffic bottlenecks, DFS is vastly more efficient for our needs. DFS with backtracking maintains a minimal linear memory footprint ($O(V)$ space), whereas BFS would require storing an exponentially growing queue of partial paths, which could easily overwhelm system memory on complex maps.
-
 ### 2. Flight Planning & Traffic Management
 At every turn, drones dynamically evaluate their available routes. The flight planner logic evaluates the network state based on strictly enforced rules:
 - **Capacity Checks:** Ensures the target hub has physical drone bay space available.

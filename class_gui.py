@@ -627,27 +627,27 @@ class Gui:
         """
         col = self.col if self.col < UX_MAX else UX_STD
 
-        winner_drone = metrics["winner_drone"]
         min_turns = metrics["min_turns"]
         max_turns = metrics["max_turns"]
         drones_per_turn = metrics["drones_moved_per_turn"]
         avg_drone = metrics["avg_turns_per_drone"]
         total_cost = metrics["total_path_cost"]
+        total_turns = metrics["current_turn"]
 
         title = " SUCCESS! ".center(col, "=")
         pannel = (
             f"Total path cost       : {total_cost:03d}    "
-            f"Min turns : {min_turns:03d}".center(
+            f"Min turns   : {min_turns:03d}".center(
                 self.col, " "
             )
             + "\n"
             + f"Drones moved per turn : {int(drones_per_turn):02d}%    "
-            f"Max turns : {max_turns:03d}".center(
+            f"Max turns   : {max_turns:03d}".center(
                 self.col, " "
             )
             + "\n"
             + f"Turns per drone       : {int(avg_drone):03d}    "
-            f"Winner    : {winner_drone.rjust(3, ' ')}".center(
+            f"Total turns : {total_turns:03d}".center(
                 self.col, " "
             )
         )
