@@ -56,7 +56,7 @@ This will launch the interactive terminal menu where you can:
 
 ### UX Demo
 
-<img width="800" height="611" alt="fly_in_demo" src="https://github.com/user-attachments/assets/c276a892-8443-4512-86c9-7e64b097ee5d" />
+<img width="800" height="611" alt="fly_in_demo" src="https://github.com/user-attachments/assets/3872247a-4eed-419a-a94e-193e61de0178" />
 
 ## Algorithm Choices & Implementation Strategy
 
