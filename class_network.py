@@ -26,8 +26,9 @@ class HubType(Enum):
 
 
 class Hub(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
     """Represents a Hub node with coordinates and logic variables."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     hub_type: HubType
     name: str = Field(pattern=r"^[^- ]*$")
     coords: Tuple[int, int]
@@ -143,7 +144,6 @@ class Path:
 
 class Drone(BaseModel):
     """Logical entity encapsulating drone navigation and properties."""
-
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: str

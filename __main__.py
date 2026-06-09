@@ -23,8 +23,8 @@ def main() -> None:
                 if map_file is None:
                     goodbye()
                 map_path = str(map_file)
-                map_name = map_path.split("/")[-1].removesuffix(".txt")
                 map = MapParser(map_path)
+                map_name = map.data["map"]
                 net = Network(**map.data)
                 sim = Simulator(net)
                 gui = Gui(net)
@@ -36,6 +36,11 @@ def main() -> None:
                 print(f"    DETAILS: {e}")
                 wait_for_enter(None)
                 continue
+
+            except Exception as e:
+                print(f"CRITICAL ERROR: {e}")
+                wait_for_enter(None)
+                goodbye()
 
         manual = False
         config = configure_ux(gui)
@@ -151,6 +156,7 @@ def confirm_map(gui: Gui, map_name: str) -> bool:
     print(UX["confirm_map"].center(col))
     print("═" * col, end="\n\n")
     print(UX["map_name"].format(map_name=map_name), end="\n\n")
+
     if gui.col < UX_MAX:
         gui.print_grid(gui.grid)
     else:
