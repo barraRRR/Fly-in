@@ -55,8 +55,10 @@ This will launch the interactive terminal menu where you can:
 3. Choose a simulation speed (Manual step-by-step, Automatic, Fast, or Direct).
 
 ### UX Demo
-
+<div align=center>
 <img width="800" height="611" alt="fly_in_demo" src="https://github.com/user-attachments/assets/3872247a-4eed-419a-a94e-193e61de0178" />
+</div>
+
 
 ## Algorithm Choices & Implementation Strategy
 
