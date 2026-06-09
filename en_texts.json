@@ -1,6 +1,6 @@
 {
     "ux": {
-        "ok": "OK",
+        "ok": " OK",
         "loading_fail": "FAIL",
         "permission_denied": "❌ Permission denied",
         "no_files_found": "❌ No folders or .txt files found",

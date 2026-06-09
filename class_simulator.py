@@ -301,9 +301,8 @@ class Simulator:
             str: Formatted string detailing active drone movements.
         """
         drone_strings = [
-            f"{drone.id}-{
-                drone.destination.name if drone.destination else "Unknown"
-                }"
+            f"{drone.id}-"
+            f"{drone.destination.name if drone.destination else 'Unknown'}"
             for drone in self.drones_in_motion
         ]
         final_str = " ".join(drone_strings)

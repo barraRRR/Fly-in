@@ -36,7 +36,6 @@ class MapParser:
         with open(self.path, "r") as f:
             print(STATUS["parsing_map"].format(map=self.path), end="")
             raw = f.readlines()
-        print(" OK")
         print(UX["ok"])
         for line in raw:
             clean_line = line.strip()
