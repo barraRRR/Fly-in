@@ -230,7 +230,6 @@ class Gui:
                     x1 = grid_x1 + 14
                     x2 = grid_x2 + 14
 
-                # traffic
                 while self.grid[y1][x1]["char"] == "■":
                     y1 -= 1
                 while self.grid[y2][x2]["char"] == "■":
@@ -264,7 +263,7 @@ class Gui:
             List[Tuple[int, int]]: Sequential coordinates of the path.
         """
         tie_breaker = 0
-        # Cola: (f_score, giros, orden, cx, cy, dir_x, dir_y, camino)
+        # Queue: (f_score, turns, order, cx, cy, dir_x, dir_y, path)
         queue = [(0, 0, tie_breaker, x1, y1, 0, 0, [(x1, y1)])]
         best_costs: Dict[Tuple[int, int, int, int], Tuple[int, int]] = {}
 
@@ -279,8 +278,6 @@ class Gui:
             target_dx = 1 if x2 > cx else (-1 if x2 < cx else 0)
             target_dy = 1 if y2 > cy else (-1 if y2 < cy else 0)
 
-            # Ordenamos los posibles movimientos dando prioridad a la
-            # dirección que más nos acerque al objetivo
             moves = []
             if abs_dx >= abs_dy:
                 if target_dx != 0:
@@ -288,7 +285,6 @@ class Gui:
                 if target_dy != 0:
                     moves.append((cx, cy + target_dy))
                 if target_dy == 0:
-                    # Intentar rodear si estamos alineados en Y
                     moves.extend([(cx, cy + 1), (cx, cy - 1)])
                 if target_dx != 0:
                     moves.append((cx - target_dx, cy))
@@ -300,14 +296,12 @@ class Gui:
                 if target_dx != 0:
                     moves.append((cx + target_dx, cy))
                 if target_dx == 0:
-                    # Intentar rodear si estamos alineados en X
                     moves.extend([(cx + 1, cy), (cx - 1, cy)])
                 if target_dy != 0:
                     moves.append((cx, cy - target_dy))
                 if target_dx != 0:
                     moves.append((cx - target_dx, cy))
 
-            # Eliminar duplicados manteniendo el orden
             unique_moves = []
             for m in moves:
                 if m not in unique_moves:
@@ -315,24 +309,17 @@ class Gui:
 
             for nx, ny in unique_moves:
                 if (nx, ny) not in self.grid_block:
-                    # Asegurarse de no salir de los límites de la terminal
                     if 0 <= nx < self.col and 0 <= ny < self.row:
                         n_dx = nx - cx
                         n_dy = ny - cy
                         is_valid = True
 
-                        # Evitar giros sobre líneas existentes para
-                        # asegurar cruces perpendiculares
                         current_char = self.grid[cy][cx]["char"]
                         if current_char == "│" and nx == cx:
-                            # Sobre vertical, no mover vertical
                             is_valid = False
                         elif current_char == "─" and ny == cy:
-                            # Sobre horizontal, no mover horizontal
                             is_valid = False
 
-                        # Comprobar la celda de destino para evitar
-                        # solapamientos
                         if is_valid and (nx, ny) != (x2, y2):
                             target_char = self.grid[ny][nx]["char"]
                             if nx != cx and target_char not in [" ", "│"]:
@@ -342,8 +329,6 @@ class Gui:
 
                         if is_valid:
                             new_len = len(path)
-                            # Sumar un giro si cambiamos la dirección
-                            # (ignoramos el paso inicial donde dir es 0,0)
                             is_turn = (
                                 1
                                 if (
@@ -356,14 +341,11 @@ class Gui:
 
                             state_key = (nx, ny, n_dx, n_dy)
 
-                            # Comprobamos si hemos encontrado una ruta
-                            # mejor hacia este estado
                             if state_key not in best_costs or best_costs[
                                 state_key
                             ] > (new_len, new_turns):
                                 best_costs[state_key] = (new_len, new_turns)
 
-                                # Heurística: Distancia de Manhattan
                                 h = abs(x2 - nx) + abs(y2 - ny)
                                 f = new_len + h
                                 tie_breaker += 1
@@ -382,7 +364,7 @@ class Gui:
                                     ),
                                 )
 
-        return []  # Retorna vacío si no hay camino posible
+        return []
 
     def _fill_line(
         self, line: List[Tuple[int, int]], info: Optional[str], frame: int = 0
@@ -394,20 +376,16 @@ class Gui:
             info (str, optional): Traffic capacity text. Defaults to None.
             frame (int, optional): Animation frame index. Defaults to 0.
         """
-        # Iteramos desde el segundo elemento hasta el penúltimo para
-        # evitar desbordamientos
         for i in range(1, len(line) - 1):
-            px, py = line[i - 1]  # Punto anterior
-            dx, dy = line[i]  # Punto actual
-            nx, ny = line[i + 1]  # Punto siguiente
+            px, py = line[i - 1]
+            dx, dy = line[i]
+            nx, ny = line[i + 1]
 
-            # Detectamos en qué direcciones están los dos puntos adyacentes
             left = (px < dx) or (nx < dx)
             right = (px > dx) or (nx > dx)
             up = (py < dy) or (ny < dy)
             down = (py > dy) or (ny > dy)
 
-            # Elegimos el carácter según la combinación de direcciones
             if left and right:
                 char = "─"
             elif up and down:
@@ -423,11 +401,6 @@ class Gui:
             else:
                 continue
 
-            # Si la celda está vacía, dibujamos el carácter de nuestra ruta.
-            # Si ya hay un carácter (estamos cruzando otra línea), no lo
-            # sobreescribimos
-            # para crear la ilusión de que nuestra línea actual pasa
-            # "por debajo".
             if self.grid[dy][dx]["char"] == " ":
                 self.grid[dy][dx]["char"] = char
                 self.grid[dy][dx]["color"] = self.PALETTE["line"]
