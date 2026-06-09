@@ -11,7 +11,7 @@ install:
 		venv/bin/python3 -m wget https://cdn.intra.42.fr/pdf/pdf/204760/en.subject.pdf
 
 run:
-		. source venv/bin/avtivate & python3 __main__.py
+		. source venv/bin/activate & python3 __main__.py
 
 debug:
 		venv/bin/python3 -m pdb __main__.py
