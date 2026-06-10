@@ -311,7 +311,7 @@ class Simulator:
             str: Formatted string detailing active drone movements.
         """
         drone_strings: List[str] = []
-        
+
         for drone in self.drones_in_motion:
             if drone.status == DroneStatus.FLYING:
                 dest = (
@@ -342,7 +342,7 @@ class Simulator:
         self.metrics["total_path_cost"] = sum(
             [d.total_moves for d in self.delivered_drones]
         )
-        
+
         if self.metrics["current_turn"] > 0:
             self.metrics["drones_moved_per_turn"] = (
                 self.metrics["total_path_cost"]
