@@ -2,6 +2,7 @@ from class_network import Network, Hub, HubType
 from typing import List, Dict, Tuple, Set, Any, Optional
 import heapq
 from blessed import Terminal
+import warnings
 from utils import UX_MAX, UX_STD, slice_str
 
 
@@ -476,9 +477,11 @@ class Gui:
                 if color.startswith("#"):
                     self.color_cache[color] = self.term.color_hex(color)
                 else:
-                    self.color_cache[color] = getattr(
-                        self.term, color.lower(), self.term.normal
-                    )
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", UserWarning)
+                        self.color_cache[color] = getattr(
+                            self.term, color.lower(), self.term.normal
+                        )
             except Exception:
                 self.color_cache[color] = ""
 
