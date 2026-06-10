@@ -49,7 +49,9 @@ def main() -> None:
                 print(ERROR["parser"]["parsing_error"])
                 for error in e.errors():
                     field_loc = " -> ".join(str(loc) for loc in error["loc"])
-                    display_loc = field_loc if field_loc else "Map Configuration"
+                    display_loc = (
+                        field_loc if field_loc else "Map Configuration"
+                    )
                     print(f"   └── [{display_loc}] {error['msg']}\n")
                 wait_for_enter(None)
                 continue

@@ -89,7 +89,9 @@ class MapParser:
                 payload["connections"].append(conn)
 
             else:
-                raise ValueError(ERROR["parser"]["invalid_key"].format(key=key))
+                raise ValueError(
+                    ERROR["parser"]["invalid_key"].format(key=key)
+                    )
 
         if not payload["start_hub"]:
             raise ValueError(ERROR["parser"]["missing_start_hub"])
@@ -112,7 +114,7 @@ class MapParser:
         hub_type, data_raw = line.split(":", 1)
         hub_type = hub_type.strip(" :")
         data = data_raw.strip().split(" ")
-        
+
         if len(data) < 3 or not data[0]:
             raise ValueError(ERROR["parser"]["invalid_hub_format"])
 
@@ -121,7 +123,9 @@ class MapParser:
             x = int(data[1])
             y = int(data[2])
         except ValueError:
-            raise ValueError(ERROR["parser"]["invalid_coordinates"].format(name=name))
+            raise ValueError(
+                ERROR["parser"]["invalid_coordinates"].format(name=name)
+                )
 
         payload: Dict[str, Any] = {
             "hub_type": hub_type,
@@ -153,10 +157,14 @@ class MapParser:
                     try:
                         payload[meta] = int(value)
                     except ValueError:
-                        raise ValueError(ERROR["parser"]["invalid_max_drones"].format(name=name))
-                    
+                        raise ValueError(
+                            ERROR["parser"][
+                                "invalid_max_drones"
+                                ].format(name=name)
+                            )
+
                     flag_max_drones = True
-                    
+
                 elif meta == "color":
                     if flag_color:
                         raise ValueError(
@@ -215,14 +223,14 @@ class MapParser:
                 raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
             max_link_capacity = data[1].strip("[]").split("=")[1]
-            
+
             try:
                 payload["max_link_capacity"] = int(max_link_capacity)
-        
+
             except ValueError:
                 raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
         elif len(data) > 2:
-                raise ValueError(ERROR["parser"]["invalid_capacity_format"])
+            raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
         return payload
