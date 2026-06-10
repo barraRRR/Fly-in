@@ -54,7 +54,8 @@
     "drone": {
         "take_off_none_hub": "Drone cannot take off from a None hub.",
         "take_off_no_destination": "Drone cannot take off without a destination.",
-        "current_hub_none_path_status": "current_hub cannot be None when calling _path_status."
+        "current_hub_none_path_status": "current_hub cannot be None when calling _path_status.",
+        "arrive_none_hub": "Drone cannot arrive to a None hub."
     },
     "error": {
         "parser": {
@@ -70,11 +71,19 @@
             "missing_hub": "Invalid connection: hub '{point}' not found.",
             "missing_start_hub": "There must be exactly one start hub.",
             "missing_end_hub": "There must be exactly one end hub.",
-            "parsing_error": "ERROR: Failed to parse the map file. Please check its format."
+            "parsing_error": "ERROR: Failed to parse the map file. Please check its format.",
+            "invalid_max_link_capacity": "Link capacity must be a positive integer.",
+            "invalid_metadata_format": "Invalid metadata format. Expected format: [key=value].",
+            "invalid_capacity_format": "Invalid capacity format. Expected format: [max=<positive_integer>].",
+            "invalid_coordinates": "Invalid coordinates for hub '{name}'. Expected integers.",
+            "invalid_max_drones": "Invalid max_drones value for hub '{name}'. Expected integer.",
+            "invalid_connection_format": "Invalid connection format.",
+            "invalid_hub_format": "Invalid hub format. Expected format: <hub_type>: <name without ' ' or '-'> <x> <y>"
         },
         "critical": {
             "no_available_paths": "Critical error: no available paths for drone '{drone_id}'.",
-            "texts_load_fail": "Critical error: failed to load language texts. Aborting launch..."
+            "texts_load_fail": "Critical error: failed to load language texts. Aborting launch...",
+            "no_valid_paths": "Critical error: No valid paths found between start and end hubs."
         }
     }
 }

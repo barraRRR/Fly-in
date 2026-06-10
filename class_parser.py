@@ -53,7 +53,10 @@ class MapParser:
                 raise ValueError(ERROR["parser"]["nb_drones_repeated"])
 
             elif key == "nb_drones":
-                payload["nb_drones"] = int(data)
+                try:
+                    payload["nb_drones"] = int(data)
+                except ValueError:
+                    raise ValueError(ERROR["parser"]["nb_drones_first_item"])
                 first_line_nb_drones = True
 
             elif key == "start_hub" and not payload["start_hub"]:
@@ -70,10 +73,28 @@ class MapParser:
                 payload["hub"].append(self._parse_hub(line))
 
             elif key == "connection":
-                payload["connections"].append(self._parse_connection(line))
+                conn = self._parse_connection(line)
+                defined_hubs = [h["name"] for h in payload["hub"]]
+                if payload["start_hub"]:
+                    defined_hubs.append(payload["start_hub"]["name"])
+                if payload["end_hub"]:
+                    defined_hubs.append(payload["end_hub"]["name"])
+
+                for pt in [conn["point_a"], conn["point_b"]]:
+                    if pt not in defined_hubs:
+                        raise ValueError(
+                            ERROR["parser"]["missing_hub"].format(point=pt)
+                            )
+
+                payload["connections"].append(conn)
 
             else:
-                raise ValueError
+                raise ValueError(ERROR["parser"]["invalid_key"].format(key=key))
+
+        if not payload["start_hub"]:
+            raise ValueError(ERROR["parser"]["missing_start_hub"])
+        if not payload["end_hub"]:
+            raise ValueError(ERROR["parser"]["missing_end_hub"])
 
         return payload
 
@@ -91,10 +112,16 @@ class MapParser:
         hub_type, data_raw = line.split(":", 1)
         hub_type = hub_type.strip(" :")
         data = data_raw.strip().split(" ")
-        name = data[0]
+        
+        if len(data) < 3 or not data[0]:
+            raise ValueError(ERROR["parser"]["invalid_hub_format"])
 
-        x = int(data[1])
-        y = int(data[2])
+        name = data[0]
+        try:
+            x = int(data[1])
+            y = int(data[2])
+        except ValueError:
+            raise ValueError(ERROR["parser"]["invalid_coordinates"].format(name=name))
 
         payload: Dict[str, Any] = {
             "hub_type": hub_type,
@@ -114,7 +141,10 @@ class MapParser:
                 value = value_raw.strip("[]")
                 if meta in ["color", "max_drones", "zone"]:
                     if meta == "max_drones":
-                        payload[meta] = int(value)
+                        try:
+                            payload[meta] = int(value)
+                        except ValueError:
+                            raise ValueError(ERROR["parser"]["invalid_max_drones"].format(name=name))
                     else:
                         payload[meta] = value
                 else:
@@ -141,7 +171,7 @@ class MapParser:
         data_raw = line.split(":", 1)[1]
         data = data_raw.strip().split(" ")
         if "-" not in data[0]:
-            raise ValueError("Invalid connection format")
+            raise ValueError(ERROR["parser"]["invalid_connection_format"])
 
         point_a, point_b = data[0].split("-")
         payload: Dict[str, Any] = {
@@ -153,8 +183,13 @@ class MapParser:
             if "=" not in data[1]:
                 raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
-            max_link_capacity = int(data[1].strip("[]").split("=")[1])
-            payload["max_link_capacity"] = max_link_capacity
+            max_link_capacity = data[1].strip("[]").split("=")[1]
+            
+            try:
+                payload["max_link_capacity"] = int(max_link_capacity)
+        
+            except ValueError:
+                raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
         except IndexError:
             pass

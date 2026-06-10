@@ -6,6 +6,7 @@ from utils import clear, menu, wait_for_enter, select_map_file
 from utils import welcome, goodbye, DELAY, STATUS, ERROR, UX_MAX, UX_STD, UX
 from typing import List
 from time import sleep
+from pydantic import ValidationError
 import utils
 
 
@@ -31,14 +32,26 @@ def main() -> None:
                 if confirm_map(gui, map_name):
                     break
 
-            except ValueError as e:
+            except ValidationError as e:
+                clear()
                 print(ERROR["parser"]["parsing_error"])
-                print(f"    DETAILS: {e}")
+                for error in e.errors():
+                    field_loc = " -> ".join(str(loc) for loc in error["loc"])
+                    display_loc = field_loc if field_loc else "Map Configuration"
+                    print(f"   └── [{display_loc}] {error['msg']}\n")
+                wait_for_enter(None)
+                continue
+
+            except ValueError as e:
+                clear()
+                print(ERROR["parser"]["parsing_error"])
+                print(f"   └── {e}\n")
                 wait_for_enter(None)
                 continue
 
             except Exception as e:
-                print(f"CRITICAL ERROR: {e}")
+                clear()
+                print(f"CRITICAL ERROR: {e}\n")
                 wait_for_enter(None)
                 goodbye()
 

@@ -5,16 +5,18 @@ install:
 		venv/bin/pip install --upgrade pip
 		venv/bin/pip install -r requirements.txt
 		rm -rf maps
+		rm -f maps.tar.gz
 		venv/bin/python3 -m wget https://cdn.intra.42.fr/document/document/49269/maps.tar.gz
 		tar -xvf maps.tar.gz
 		rm -rf maps.tar.gz
-		venv/bin/python3 -m wget https://cdn.intra.42.fr/pdf/pdf/204760/en.subject.pdf
+		rm -f en.subject.pdf
+		venv/bin/python3 -m wget -o en.subject.pdf https://cdn.intra.42.fr/pdf/pdf/204760/en.subject.pdf
 
 run:
-		./venv/bin/python3 __main__.py
+		./venv/bin/python3 fly_in.py
 
 debug:
-		venv/bin/python3 -m pdb __main__.py
+		venv/bin/python3 -m pdb fly_in.py
 
 clean:
 		rm -rf __pycache__
