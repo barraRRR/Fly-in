@@ -34,6 +34,9 @@ class Simulator:
         self.delivered_drones: List[Drone] = []
         self.all_paths: List[Path] = self._find_all_paths()
 
+        if not self.all_paths:
+            raise ValueError(ERROR["critical"]["no_valid_paths"])
+
         min_turns = min([path.turns_to_finish for path in self.all_paths])
         for drone in self.drones_left:
             drone.remaining_turns = min_turns
@@ -324,21 +327,27 @@ class Simulator:
         self.metrics["total_path_cost"] = sum(
             [d.total_moves for d in self.delivered_drones]
         )
-        self.metrics["drones_moved_per_turn"] = (
-            self.metrics["total_path_cost"]
-            / (self.metrics["current_turn"] * self.net.nb_drones)
-            * 100
-        )
-        self.metrics["min_turns"] = min(
-            [d.total_moves for d in self.delivered_drones]
-        )
-        winner_drone = min(
-            [d for d in self.delivered_drones], key=lambda d: d.total_moves
-        )
-        self.metrics["winner_drone"] = winner_drone.id
-        self.metrics["max_turns"] = max(
-            [d.total_moves for d in self.delivered_drones]
-        )
-        self.metrics["avg_turns_per_drone"] = self.metrics[
-            "total_path_cost"
-        ] / len(self.delivered_drones)
+        
+        if self.metrics["current_turn"] > 0:
+            self.metrics["drones_moved_per_turn"] = (
+                self.metrics["total_path_cost"]
+                / (self.metrics["current_turn"] * self.net.nb_drones)
+                * 100
+            )
+        else:
+            self.metrics["drones_moved_per_turn"] = 0
+
+        if self.delivered_drones:
+            self.metrics["min_turns"] = min(
+                [d.total_moves for d in self.delivered_drones]
+            )
+            self.metrics["max_turns"] = max(
+                [d.total_moves for d in self.delivered_drones]
+            )
+            self.metrics["avg_turns_per_drone"] = (
+                self.metrics["total_path_cost"] / len(self.delivered_drones)
+            )
+        else:
+            self.metrics["min_turns"] = 0
+            self.metrics["max_turns"] = 0
+            self.metrics["avg_turns_per_drone"] = 0

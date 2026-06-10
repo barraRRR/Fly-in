@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, model_validator, ConfigDict
 from typing import Optional, Tuple, Any, List, Dict, Union
 from utils import ERROR
 from enum import Enum
+from pydantic_core import PydanticCustomError
 
 
 class Zone(Enum):
@@ -173,7 +174,7 @@ class Drone(BaseModel):
     def _arrive(self) -> None:
         """Registers the drone inside the destination node."""
         if self.destination is None:
-            raise ValueError("Drone cannot arrive to a None hub.")
+            raise ValueError(ERROR["drone"]["arrive_none_hub"])
         if self.destination.hub_type != HubType.END:
             self.destination.drone_bay.append(self)
         self.current_hub = self.destination
@@ -217,11 +218,17 @@ class Network(BaseModel):
         all_hubs = self.hub + [self.start_hub, self.end_hub]
         unique_names = {hub.name for hub in all_hubs}
         if len(all_hubs) != len(unique_names):
-            raise ValueError(ERROR["parser"]["duplicate_hub_names"])
+            raise PydanticCustomError(
+                "duplicate_hub_names",
+                ERROR["parser"]["duplicate_hub_names"]
+            )
 
         unique_coords = {hub.coords for hub in all_hubs}
         if len(all_hubs) != len(unique_coords):
-            raise ValueError(ERROR["parser"]["duplicate_hub_coords"])
+            raise PydanticCustomError(
+                "duplicate_hub_coords",
+                ERROR["parser"]["duplicate_hub_coords"]
+            )
 
         unique_links = set()
         hub_dict = {hub.name: hub for hub in self.hub}
@@ -230,11 +237,17 @@ class Network(BaseModel):
         for link in self.connections:
             current_link = tuple(sorted((link["point_a"], link["point_b"])))
             if current_link in unique_links:
-                raise ValueError(ERROR["parser"]["duplicate_link"])
+                raise PydanticCustomError(
+                    "duplicate_link",
+                    ERROR["parser"]["duplicate_link"].format(
+                        point_a=link["point_a"], point_b=link["point_b"]
+                    )
+                )
             unique_links.add(current_link)
 
             if link["point_a"] == link["point_b"]:
-                raise ValueError(
+                raise PydanticCustomError(
+                    "self_link",
                     ERROR["parser"]["self_link"].format(
                         point_a=link["point_a"], point_b=link["point_b"]
                     )
@@ -242,7 +255,8 @@ class Network(BaseModel):
 
             for point in [link["point_a"], link["point_b"]]:
                 if point not in unique_names:
-                    raise ValueError(
+                    raise PydanticCustomError(
+                        "missing_hub",
                         ERROR["parser"]["missing_hub"].format(point=point)
                     )
 
@@ -251,7 +265,10 @@ class Network(BaseModel):
 
             max_link_capacity = link.get("max_link_capacity", 1)
             if max_link_capacity < 1:
-                raise ValueError(ERROR["parser"]["invalid_max_link_capacity"])
+                raise PydanticCustomError(
+                    "invalid_max_link_capacity",
+                    ERROR["parser"]["invalid_max_link_capacity"]
+                )
 
             if hub_a and hub_b:
                 hub_a.links.append(
