@@ -8,6 +8,7 @@ from typing import List
 from time import sleep
 from pydantic import ValidationError
 import utils
+import sys
 
 
 __author__ = "Javier Barreiro"
@@ -16,11 +17,22 @@ __email__ = "jbarreir@student.42madrid.com"
 
 def main() -> None:
     """Main execution loop handling application state and interactive flow."""
+
+    map_arg = None
+    if len(sys.argv) == 2:
+        map_arg = sys.argv[1]
+
+    elif len(sys.argv) > 2:
+        clear()
+        print(ERROR["critical"]["usage"])
+        sys.exit(1)
+
     welcome()
     while True:
         while True:
             try:
-                map_file = select_map_file()
+                map_file = map_arg if map_arg else select_map_file()
+                map_arg = None
                 if map_file is None:
                     goodbye()
                 map_path = str(map_file)
