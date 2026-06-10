@@ -310,11 +310,26 @@ class Simulator:
         Returns:
             str: Formatted string detailing active drone movements.
         """
-        drone_strings = [
-            f"{drone.id}-"
-            f"{drone.destination.name if drone.destination else 'Unknown'}"
-            for drone in self.drones_in_motion
-        ]
+        drone_strings: List[str] = []
+        
+        for drone in self.drones_in_motion:
+            if drone.status == DroneStatus.FLYING:
+                dest = (
+                    drone.destination.name if drone.destination else 'Unknown'
+                )
+                stat_str = f"{drone.id}-{dest}"
+
+            elif drone.status == DroneStatus.RESTRICTED_FLIGHT:
+                origin = (
+                    drone.origin.name if drone.origin else 'Unknown'
+                )
+                dest = (
+                    drone.destination.name if drone.destination else 'Unknown'
+                )
+                stat_str = f"{drone.id}-{origin}-{dest}"
+
+            drone_strings.append(stat_str)
+
         final_str = " ".join(drone_strings)
 
         with open("output_file.txt", "a") as out:
