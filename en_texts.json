@@ -74,6 +74,7 @@
             "parsing_error": "ERROR: Failed to parse the map file. Please check its format.",
             "invalid_max_link_capacity": "Link capacity must be a positive integer.",
             "invalid_metadata_format": "Invalid metadata format. Expected format: [key=value].",
+            "invalid_metadata_duplicate": "Duplicate metadata tag detected: '{meta}'.",
             "invalid_capacity_format": "Invalid capacity format. Expected format: [max=<positive_integer>].",
             "invalid_coordinates": "Invalid coordinates for hub '{name}'. Expected integers.",
             "invalid_max_drones": "Invalid max_drones value for hub '{name}'. Expected integer.",

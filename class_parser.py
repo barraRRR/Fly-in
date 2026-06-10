@@ -131,6 +131,9 @@ class MapParser:
         }
 
         try:
+            flag_max_drones = False
+            flag_color = False
+            flag_zone = False
             for chunk in data[3:]:
                 if "=" not in chunk:
                     raise ValueError(
@@ -139,14 +142,41 @@ class MapParser:
                 meta, value_raw = chunk.split("=")
                 meta = meta.strip("[]")
                 value = value_raw.strip("[]")
-                if meta in ["color", "max_drones", "zone"]:
-                    if meta == "max_drones":
-                        try:
-                            payload[meta] = int(value)
-                        except ValueError:
-                            raise ValueError(ERROR["parser"]["invalid_max_drones"].format(name=name))
-                    else:
-                        payload[meta] = value
+
+                if meta == "max_drones":
+                    if flag_max_drones:
+                        raise ValueError(
+                            ERROR["parser"][
+                                "invalid_metadata_duplicate"
+                                ].format(meta=meta)
+                            )
+                    try:
+                        payload[meta] = int(value)
+                    except ValueError:
+                        raise ValueError(ERROR["parser"]["invalid_max_drones"].format(name=name))
+                    
+                    flag_max_drones = True
+                    
+                elif meta == "color":
+                    if flag_color:
+                        raise ValueError(
+                            ERROR["parser"][
+                                "invalid_metadata_duplicate"
+                                ].format(meta=meta)
+                            )
+                    payload[meta] = value
+                    flag_color = True
+
+                elif meta == "zone":
+                    if flag_zone:
+                        raise ValueError(
+                            ERROR["parser"][
+                                "invalid_metadata_duplicate"
+                                ].format(meta=meta)
+                            )
+                    payload[meta] = value
+                    flag_zone = True
+
                 else:
                     raise ValueError(
                         ERROR["parser"]["metadata"].format(meta=meta)
@@ -179,7 +209,8 @@ class MapParser:
             "point_b": point_b,
         }
 
-        try:
+        if len(data) == 2:
+
             if "=" not in data[1]:
                 raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
@@ -191,7 +222,7 @@ class MapParser:
             except ValueError:
                 raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
-        except IndexError:
-            pass
+        elif len(data) > 2:
+                raise ValueError(ERROR["parser"]["invalid_capacity_format"])
 
         return payload
