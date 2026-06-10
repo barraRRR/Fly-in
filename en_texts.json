@@ -84,7 +84,8 @@
         "critical": {
             "no_available_paths": "Critical error: no available paths for drone '{drone_id}'.",
             "texts_load_fail": "Critical error: failed to load language texts. Aborting launch...",
-            "no_valid_paths": "Critical error: No valid paths found between start and end hubs."
+            "no_valid_paths": "Critical error: No valid paths found between start and end hubs.",
+            "usage": "Program usage:\n          python3 fly_in.py\n         python3 fly_in.py <map_file>"
         }
     }
 }
