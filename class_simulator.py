@@ -330,12 +330,16 @@ class Simulator:
 
             drone_strings.append(stat_str)
 
-        final_str = " ".join(drone_strings)
+        final_drone_str = " ".join(drone_strings)
+
+        all_hubs = self.net.hub + [self.net.start_hub, self.net.end_hub]
+        for hub in all_hubs:
+            hub_str = f"{hub.name} {len(hub.drone_bay)}/{hub.max_drones}"
 
         with open("output_file.txt", "a") as out:
             out.write(final_str + "\n")
 
-        return final_str
+        return final_drone_str
 
     def _get_metrics(self) -> None:
         """Calculates and stores final performance metrics after a run."""
