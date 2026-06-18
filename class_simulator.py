@@ -333,8 +333,22 @@ class Simulator:
         final_drone_str = " ".join(drone_strings)
 
         all_hubs = self.net.hub + [self.net.start_hub, self.net.end_hub]
+        all_hubs_list = []
         for hub in all_hubs:
             hub_str = f"{hub.name} {len(hub.drone_bay)}/{hub.max_drones}"
+            all_hubs_list.append(hub_str)
+        all_hub_str = " ".join(all_hubs_list)
+
+        unique_links = set()
+        hub_dict = {hub.name: hub for hub in all_hubs}
+        for link in self.connections:
+            current_link = tuple(sorted((link["point_a"], link["point_b"])))
+            if current_link in unique_links:
+                continue
+            unique_links.add(current_link)
+            free_connection =
+            link_str = f"{link["point_a"].name}-{link["point_b"].name} 
+            
 
         with open("output_file.txt", "a") as out:
             out.write(final_str + "\n")
