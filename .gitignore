@@ -3,7 +3,6 @@ __pycache__
 .pytest_cache
 .mypy_cache
 venv/
-maps/
 pyproject.toml
 import_hub_data.py
 hub_data.json
