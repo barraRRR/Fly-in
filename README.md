@@ -1,9 +1,4 @@
-*This project has been created as part of the 42 curriculum by jbarreir.*
-
-# Fly-in
-
 <div align="center">
-
 
 <img width="800" height="418" alt="fly_in_kv" src="https://github.com/user-attachments/assets/0120dad2-f25d-45b7-8e95-cb3a5c93ae61" />
 
